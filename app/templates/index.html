@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}Главная | ERP VITTAVENTO{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h1 class="card-title">ERP VITTAVENTO</h1>
+                <p class="card-text">
+                    Добро пожаловать в систему управления ресурсами предприятия VITTAVENTO.
+                    Эта система предназначена для автоматизации процессов управления производством
+                    дверных шаблонов, фрез, комплектующих, межкомнатных дверей и станков ЧПУ.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Модуль Артикулы -->
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-boxes me-2"></i>
+                    Артикулы
+                </h5>
+                <p class="card-text">Управление номенклатурой, категориями и атрибутами артикулов.</p>
+                <a href="#" class="btn btn-primary">Перейти</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модуль Склад -->
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-warehouse me-2"></i>
+                    Склад
+                </h5>
+                <p class="card-text">Учет складских остатков, движение товаров, инвентаризация.</p>
+                <a href="#" class="btn btn-primary">Перейти</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модуль Производство -->
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-industry me-2"></i>
+                    Производство
+                </h5>
+                <p class="card-text">Управление производственными заказами, спецификациями и операциями.</p>
+                <a href="#" class="btn btn-primary">Перейти</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модуль Продажи -->
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-shopping-cart me-2"></i>
+                    Продажи
+                </h5>
+                <p class="card-text">Управление заказами клиентов, ценами и отгрузками.</p>
+                <a href="#" class="btn btn-primary">Перейти</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модуль Отчеты -->
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-chart-bar me-2"></i>
+                    Отчеты
+                </h5>
+                <p class="card-text">Аналитические отчеты, графики и статистика.</p>
+                <a href="#" class="btn btn-primary">Перейти</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модуль Администрирование -->
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-users-cog me-2"></i>
+                    Администрирование
+                </h5>
+                <p class="card-text">Управление пользователями, ролями и настройками системы.</p>
+                <a href="#" class="btn btn-primary">Перейти</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

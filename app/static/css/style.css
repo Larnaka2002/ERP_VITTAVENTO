@@ -1,0 +1,119 @@
+/*
+* ERP_VITTAVENTO основной CSS файл
+* Содержит переопределения Bootstrap и кастомные стили
+*/
+
+/* Общие стили */
+body {
+    font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+/* Стили заголовков */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+/* Стили карточек */
+.card {
+    border-radius: 0.5rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.card-title {
+    color: #2c3e50;
+}
+
+/* Стили навигации */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+/* Стили кнопок */
+.btn-primary {
+    background-color: #3498db;
+    border-color: #3498db;
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+    border-color: #2980b9;
+}
+
+/* Утилиты */
+.shadow-sm {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Стили таблиц */
+.table-hover tbody tr:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+}
+
+/* Стили для форм */
+.form-control:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+}
+
+/* Модули */
+
+/* Модуль Артикулы */
+.module-articles .card {
+    border-left: 4px solid #3498db;
+}
+
+/* Модуль Склад */
+.module-inventory .card {
+    border-left: 4px solid #2ecc71;
+}
+
+/* Модуль Производство */
+.module-production .card {
+    border-left: 4px solid #f39c12;
+}
+
+/* Модуль Продажи */
+.module-sales .card {
+    border-left: 4px solid #e74c3c;
+}
+
+/* Модуль Отчеты */
+.module-reports .card {
+    border-left: 4px solid #9b59b6;
+}
+
+/* Модуль Администрирование */
+.module-admin .card {
+    border-left: 4px solid #34495e;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .card-deck {
+        display: block;
+    }
+
+    .card {
+        margin-bottom: 20px;
+    }
+}
