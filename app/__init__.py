@@ -24,10 +24,13 @@ csrf = CSRFProtect()
 login_manager.login_view = 'auth.login'
 login_manager.login_message = 'Пожалуйста, войдите в систему для доступа к этой странице.'
 login_manager.login_message_category = 'info'
+
+
 @login_manager.user_loader
 def load_user(user_id):
     from app.models.users import User
     return User.query.get(int(user_id))
+
 
 # Импорт для инициализации базы данных
 from app.init_db import register_commands
@@ -123,11 +126,18 @@ def register_blueprints(app):
     # Импорт схем
     from app.routes.main import main_bp
 
-    # Регистрация схем
+    # Регистрация основной схемы
     app.register_blueprint(main_bp)
 
-    # Здесь будут регистрироваться другие схемы по мере разработки
-    # app.register_blueprint(articles_bp, url_prefix='/articles')
+    # Инициализация модуля артикулов
+    try:
+        from app.modules.articles import init_app as init_articles
+        init_articles(app)
+        app.logger.info("Модуль артикулов успешно инициализирован")
+    except Exception as e:
+        app.logger.error(f"Ошибка при инициализации модуля артикулов: {str(e)}")
+
+    # Здесь будут регистрироваться другие схемы или модули по мере разработки
     # app.register_blueprint(inventory_bp, url_prefix='/inventory')
     # ...
 
@@ -170,3 +180,93 @@ def register_shell_context(app):
             'app': app,
             # Здесь будут добавляться модели по мере их создания
         }
+
+    """
+    Инициализация приложения ERP VITTAVENTO
+
+    Этот модуль содержит фабрику приложения Flask и инициализацию всех компонентов.
+    """
+    import os
+    from flask import Flask
+    from flask_sqlalchemy import SQLAlchemy
+    from flask_migrate import Migrate
+    from flask_login import LoginManager
+    from config import config
+
+    # Инициализация расширений
+    db = SQLAlchemy()
+    migrate = Migrate()
+    login_manager = LoginManager()
+    login_manager.login_view = 'auth.login'
+    login_manager.login_message = 'Пожалуйста, войдите в систему для доступа к этой странице.'
+    login_manager.login_message_category = 'info'
+
+    def create_app(config_name=None):
+        """
+        Фабрика приложения Flask
+
+        Args:
+            config_name (str): Имя конфигурации (development, testing, production)
+
+        Returns:
+            Flask: Экземпляр приложения Flask
+        """
+        if config_name is None:
+            config_name = os.environ.get('FLASK_CONFIG', 'development')
+
+        app = Flask(__name__)
+        app.config.from_object(config[config_name])
+        config[config_name].init_app(app)
+
+        # Инициализация расширений
+        db.init_app(app)
+        migrate.init_app(app, db)
+        login_manager.init_app(app)
+
+        # Регистрация blueprints
+        register_blueprints(app)
+
+        # Регистрация обработчиков ошибок
+        register_error_handlers(app)
+
+        return app
+
+    def register_blueprints(app):
+        """
+        Регистрация blueprints (схем) приложения
+
+        Args:
+            app (Flask): Экземпляр Flask приложения
+        """
+        # Импорт схем
+        from app.routes.main import main_bp
+
+        # Регистрация основной схемы
+        app.register_blueprint(main_bp)
+
+        # Инициализация модулей
+        try:
+            from app.modules.articles import init_app as init_articles
+            init_articles(app)
+            app.logger.info("Модуль артикулов успешно инициализирован")
+        except Exception as e:
+            app.logger.error(f"Ошибка при инициализации модуля артикулов: {str(e)}")
+
+        # Другие модули будут добавлены здесь
+
+    def register_error_handlers(app):
+        """
+        Регистрация обработчиков ошибок
+
+        Args:
+            app (Flask): Экземпляр Flask приложения
+        """
+
+        @app.errorhandler(404)
+        def not_found_error(error):
+            return render_template('error/404.html'), 404
+
+        @app.errorhandler(500)
+        def internal_error(error):
+            db.session.rollback()
+            return render_template('error/500.html'), 500

@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Загрузка медиафайла | ERP VITTAVENTO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="my-4">Загрузка медиафайла</h1>
+    <h4 class="text-muted mb-4">{{ article.article_code }} - {{ article.name }}</h4>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('articles.upload_media', id=article.id) }}" enctype="multipart/form-data">
+                {{ form.csrf_token }}
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="media_type" class="form-label">Тип медиафайла *</label>
+                            {{ form.media_type(class="form-select" + (" is-invalid" if form.media_type.errors else "")) }}
+                            {% if form.media_type.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.media_type.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="file" class="form-label">Файл *</label>
+                            {{ form.file(class="form-control" + (" is-invalid" if form.file.errors else "")) }}
+                            {% if form.file.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.file.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <h5 class="alert-heading"><i class="fas fa-info-circle"></i> Рекомендации по загрузке файлов</h5>
+                    <ul>
+                        <li><strong>Фотографии</strong>: JPEG, PNG с разрешением не более 2000x2000 пикселей</li>
+                        <li><strong>Чертежи</strong>: PDF, DWG, SVG</li>
+                        <li><strong>Схемы</strong>: PDF, SVG, PNG</li>
+                        <li><strong>Документы</strong>: PDF, DOCX</li>
+                    </ul>
+                    <p class="mb-0">Максимальный размер файла: 10 МБ</p>
+                </div>
+
+                <div class="mt-4">
+                    <a href="{{ url_for('articles.view', id=article.id) }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Отмена
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-upload"></i> Загрузить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

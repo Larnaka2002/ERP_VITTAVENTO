@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Атрибуты артикулов | ERP VITTAVENTO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="my-4">Атрибуты артикулов</h1>
+
+    <div class="row mb-4">
+        <div class="col-md-12 text-end">
+            <a href="{{ url_for('articles.attribute_create') }}" class="btn btn-success">
+                <i class="fas fa-plus"></i> Добавить атрибут
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Наименование</th>
+                            <th>Тип поля</th>
+                            <th>Категория</th>
+                            <th>Обязательный</th>
+                            <th>Значение по умолчанию</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for attribute in attributes %}
+                        <tr>
+                            <td>{{ attribute.name }}</td>
+                            <td>
+                                {% if attribute.field_type == 'string' %}
+                                <span class="badge bg-primary">Строка</span>
+                                {% elif attribute.field_type == 'integer' %}
+                                <span class="badge bg-success">Целое число</span>
+                                {% elif attribute.field_type == 'float' %}
+                                <span class="badge bg-info">Десятичное число</span>
+                                {% elif attribute.field_type == 'boolean' %}
+                                <span class="badge bg-warning">Логическое значение</span>
+                                {% elif attribute.field_type == 'enum' %}
+                                <span class="badge bg-secondary">Перечисление</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ attribute.category.name if attribute.category else 'Все категории' }}</td>
+                            <td>
+                                {% if attribute.required %}
+                                <i class="fas fa-check text-success"></i>
+                                {% else %}
+                                <i class="fas fa-times text-secondary"></i>
+                                {% endif %}
+                            </td>
+                            <td>{{ attribute.default_value or '-' }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="#" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ attribute.id }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Модальное окно подтверждения удаления -->
+                                <div class="modal fade" id="deleteModal{{ attribute.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ attribute.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="deleteModalLabel{{ attribute.id }}">Подтверждение удаления</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Вы уверены, что хотите удалить атрибут <strong>{{ attribute.name }}</strong>?</p>
+                                                <div class="alert alert-warning">
+                                                    <i class="fas fa-exclamation-triangle"></i> Внимание! Это действие приведет к удалению всех значений этого атрибута у артикулов.
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                                                <form method="POST" action="#">
+                                                    <button type="submit" class="btn btn-danger">Удалить</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center">Атрибуты не найдены</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ url_for('articles.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> К списку артикулов
+        </a>
+    </div>
+</div>
+{% endblock %}

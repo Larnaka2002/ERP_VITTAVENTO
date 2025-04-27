@@ -5,7 +5,7 @@ from datetime import datetime
 from app import db
 
 
-class TimestampMixin(object):
+class TimestampMixin:
     """
     Миксин для добавления полей created_at и updated_at
     """
@@ -13,7 +13,7 @@ class TimestampMixin(object):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
 
-class SoftDeleteMixin(object):
+class SoftDeleteMixin:
     """
     Миксин для программного удаления объектов
     (мягкое удаление - объект остается в базе, но помечается как удаленный)
@@ -34,13 +34,10 @@ class SoftDeleteMixin(object):
         return self
 
 
-class BaseModel(db.Model, TimestampMixin):
+class BaseModel:
     """
-    Базовая модель с общими методами и полями
+    Базовая модель с общими методами
     """
-    __abstract__ = True
-
-    id = db.Column(db.Integer, primary_key=True)
 
     @classmethod
     def get_by_id(cls, record_id):
@@ -113,3 +110,13 @@ class BaseModel(db.Model, TimestampMixin):
             dict: Словарь с атрибутами объекта
         """
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+
+class Model(db.Model):
+    """
+    Базовая модель для наследования всеми моделями приложения
+    С основным функционалом и поддержкой миксинов
+    """
+    __abstract__ = True
+
+    id = db.Column(db.Integer, primary_key=True)

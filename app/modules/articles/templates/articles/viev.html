@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ article.name }} | Артикулы | ERP VITTAVENTO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Хлебные крошки -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Главная</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('articles.index') }}">Артикулы</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ article.name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h2 mb-0">{{ article.name }}</h1>
+            <p class="text-muted">Код артикула: <code>{{ article.article_code }}</code></p>
+        </div>
+        <div class="col-md-4 text-end d-flex align-items-center justify-content-end">
+            <a href="#" class="btn btn-primary me-2">
+                <i class="fas fa-edit"></i> Редактировать
+            </a>
+            <button type="button" class="btn btn-outline-danger">
+                <i class="fas fa-trash"></i> Удалить
+            </button>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Основная информация -->
+        <div class="col-md-8">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Основная информация</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3 text-muted">Категория:</div>
+                        <div class="col-md-9">{{ article.category.name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 text-muted">Код артикула:</div>
+                        <div class="col-md-9"><code>{{ article.article_code }}</code></div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 text-muted">Наименование:</div>
+                        <div class="col-md-9">{{ article.name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 text-muted">Описание:</div>
+                        <div class="col-md-9">
+                            {% if article.description %}
+                                {{ article.description }}
+                            {% else %}
+                                <span class="text-muted fst-italic">Описание отсутствует</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-3 text-muted">Статус:</div>
+                        <div class="col-md-9">
+                            {% if article.is_active %}
+                                <span class="badge bg-success">Активен</span>
+                            {% else %}
+                                <span class="badge bg-danger">Неактивен</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 text-muted">Дата создания:</div>
+                        <div class="col-md-9">{{ article.created_at.strftime('%d.%m.%Y %H:%M') }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Заглушка для дополнительных параметров -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Атрибуты</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-center text-muted py-3">
+                        <i class="fas fa-list-ul fa-2x mb-3"></i><br>
+                        В данной версии атрибуты не поддерживаются
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Дополнительная информация -->
+        <div class="col-md-4">
+            <!-- Заглушка для изображения -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Изображение</h5>
+                </div>
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-image fa-4x text-muted mb-3"></i>
+                    <p class="text-muted">Изображение отсутствует</p>
+                    <button class="btn btn-sm btn-outline-primary disabled">
+                        <i class="fas fa-upload"></i> Загрузить
+                    </button>
+                </div>
+            </div>
+
+            <!-- Заглушка для штрих-кода -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Штрих-код</h5>
+                </div>
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-barcode fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">В данной версии генерация штрих-кодов не поддерживается</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

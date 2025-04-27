@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}Создание артикула | ERP VITTAVENTO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="my-4">Создание артикула</h1>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('articles.create') }}">
+                {{ form.csrf_token }}
+
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Наименование *</label>
+                            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="category_id" class="form-label">Категория *</label>
+                            {{ form.category_id(class="form-select" + (" is-invalid" if form.category_id.errors else "")) }}
+                            {% if form.category_id.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.category_id.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Описание</label>
+                    {{ form.description(class="form-control", rows=4) }}
+                    <small class="text-muted">Подробное описание артикула (опционально)</small>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Физические характеристики</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="weight" class="form-label">Вес (кг)</label>
+                                    {{ form.weight(class="form-control" + (" is-invalid" if form.weight.errors else ""), step="0.001") }}
+                                    {% if form.weight.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.weight.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="length" class="form-label">Длина (мм)</label>
+                                    {{ form.length(class="form-control" + (" is-invalid" if form.length.errors else ""), step="0.1") }}
+                                    {% if form.length.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.length.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="width" class="form-label">Ширина (мм)</label>
+                                    {{ form.width(class="form-control" + (" is-invalid" if form.width.errors else ""), step="0.1") }}
+                                    {% if form.width.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.width.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="height" class="form-label">Высота (мм)</label>
+                                    {{ form.height(class="form-control" + (" is-invalid" if form.height.errors else ""), step="0.1") }}
+                                    {% if form.height.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.height.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Настройки</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-check mb-3">
+                                    {{ form.is_active(class="form-check-input") }}
+                                    <label class="form-check-label" for="is_active">
+                                        Активен
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check mb-3">
+                                    {{ form.is_purchasable(class="form-check-input") }}
+                                    <label class="form-check-label" for="is_purchasable">
+                                        Доступен для закупки
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check mb-3">
+                                    {{ form.is_sellable(class="form-check-input") }}
+                                    <label class="form-check-label" for="is_sellable">
+                                        Доступен для продажи
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check mb-3">
+                                    {{ form.is_manufacturable(class="form-check-input") }}
+                                    <label class="form-check-label" for="is_manufacturable">
+                                        Производимый
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <a href="{{ url_for('articles.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Отмена
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> Сохранить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

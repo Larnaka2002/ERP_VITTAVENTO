@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Создание категории артикула | ERP VITTAVENTO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="my-4">Создание категории артикула</h1>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('articles.category_create') }}">
+                {{ form.csrf_token }}
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Наименование *</label>
+                            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
+                            {% if form.name.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="code" class="form-label">Код *</label>
+                            {{ form.code(class="form-control" + (" is-invalid" if form.code.errors else "")) }}
+                            {% if form.code.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.code.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted">Уникальный код категории (например, DOORS, HANDLES, MATERIALS)</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="parent_id" class="form-label">Родительская категория</label>
+                            {{ form.parent_id(class="form-select" + (" is-invalid" if form.parent_id.errors else "")) }}
+                            {% if form.parent_id.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.parent_id.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="article_prefix" class="form-label">Префикс артикулов *</label>
+                            {{ form.article_prefix(class="form-control" + (" is-invalid" if form.article_prefix.errors else "")) }}
+                            {% if form.article_prefix.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.article_prefix.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted">Короткий префикс для генерации кодов артикулов (например, DR, HN, MT)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="sequence_start" class="form-label">Начальный номер *</label>
+                            {{ form.sequence_start(class="form-control" + (" is-invalid" if form.sequence_start.errors else "")) }}
+                            {% if form.sequence_start.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.sequence_start.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="text-muted">Начальный номер для нумерации артикулов (например, 1000)</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> Артикулы будут иметь коды вида: <strong>PREFIX000000</strong>, где PREFIX - префикс категории, а 000000 - порядковый номер.
+                </div>
+
+                <div class="mt-4">
+                    <a href="{{ url_for('articles.category_index') }}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Отмена
+                    </a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> Сохранить
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
