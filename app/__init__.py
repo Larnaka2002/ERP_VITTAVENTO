@@ -241,8 +241,12 @@ def register_shell_context(app):
         # Импорт схем
         from app.routes.main import main_bp
 
+        from app.routes.auth import auth
+
         # Регистрация основной схемы
         app.register_blueprint(main_bp)
+
+        app.register_blueprint(auth)
 
         # Инициализация модулей
         try:

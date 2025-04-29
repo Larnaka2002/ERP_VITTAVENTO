@@ -1,0 +1,1513 @@
+Index: app/modules/articles/routes.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>\"\"\"\nМаршруты для модуля артикулов\n\nЭтот модуль содержит определения маршрутов для работы с артикулами.\n\"\"\"\nfrom flask import render_template, redirect, url_for, flash, request, jsonify\nfrom app import db\nfrom app.modules.articles import articles_bp\nfrom app.modules.articles.models import Article, ArticleCategory\n\n\n@articles_bp.route('/')\ndef index():\n    \"\"\"\n    Отображение списка артикулов\n\n    Returns:\n        HTML-страница со списком артикулов\n    \"\"\"\n    # Запрос для получения всех активных артикулов\n    articles = Article.query.filter_by(is_active=True).all()\n\n    # Отображение списка артикулов\n    return render_template('articles/index.html', articles=articles)\n\n\n@articles_bp.route('/view/<int:id>')\ndef view(id):\n    \"\"\"\n    Просмотр детальной информации об артикуле\n\n    Args:\n        id (int): ID артикула\n\n    Returns:\n        HTML-страница с детальной информацией об артикуле\n    \"\"\"\n    # Запрос для получения артикула по ID\n    article = Article.query.get_or_404(id)\n\n    # Отображение информации об артикуле\n    return render_template('articles/view.html', article=article)\n\n\n# API-маршрут для получения списка артикулов в формате JSON\n@articles_bp.route('/api/list')\ndef api_list():\n    \"\"\"\n    API для получения списка артикулов\n\n    Returns:\n        JSON с массивом артикулов\n    \"\"\"\n    articles = Article.query.filter_by(is_active=True).all()\n    return jsonify([article.to_dict() for article in articles])
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/modules/articles/routes.py b/app/modules/articles/routes.py
+--- a/app/modules/articles/routes.py	(revision 4fb812fe200da0a447af5a6708af9ac3a9ff9a83)
++++ b/app/modules/articles/routes.py	(date 1745818397051)
+@@ -1,14 +1,3 @@
+-"""
+-Маршруты для модуля артикулов
+-
+-Этот модуль содержит определения маршрутов для работы с артикулами.
+-"""
+-from flask import render_template, redirect, url_for, flash, request, jsonify
+-from app import db
+-from app.modules.articles import articles_bp
+-from app.modules.articles.models import Article, ArticleCategory
+-
+-
+ @articles_bp.route('/')
+ def index():
+     """
+@@ -17,39 +6,16 @@
+     Returns:
+         HTML-страница со списком артикулов
+     """
+-    # Запрос для получения всех активных артикулов
+-    articles = Article.query.filter_by(is_active=True).all()
++    # Получаем номер страницы из параметров запроса, по умолчанию 1
++    page = request.args.get('page', 1, type=int)
++
++    # Инициализируем пустой словарь для current_filters
++    current_filters = {}
++
++    # Запрос с пагинацией для получения артикулов
++    articles = Article.query.filter_by(is_active=True).paginate(
++        page=page, per_page=10, error_out=False
++    )
+ 
+     # Отображение списка артикулов
+-    return render_template('articles/index.html', articles=articles)
+-
+-
+-@articles_bp.route('/view/<int:id>')
+-def view(id):
+-    """
+-    Просмотр детальной информации об артикуле
+-
+-    Args:
+-        id (int): ID артикула
+-
+-    Returns:
+-        HTML-страница с детальной информацией об артикуле
+-    """
+-    # Запрос для получения артикула по ID
+-    article = Article.query.get_or_404(id)
+-
+-    # Отображение информации об артикуле
+-    return render_template('articles/view.html', article=article)
+-
+-
+-# API-маршрут для получения списка артикулов в формате JSON
+-@articles_bp.route('/api/list')
+-def api_list():
+-    """
+-    API для получения списка артикулов
+-
+-    Returns:
+-        JSON с массивом артикулов
+-    """
+-    articles = Article.query.filter_by(is_active=True).all()
+-    return jsonify([article.to_dict() for article in articles])
+\ No newline at end of file
++    return render_template('articles/index.html', articles=articles, current_filters=current_filters)
+\ No newline at end of file
+Index: app/models/article.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/models/article.py b/app/models/article.py
+--- a/app/models/article.py	(revision 4fb812fe200da0a447af5a6708af9ac3a9ff9a83)
++++ b/app/models/article.py	(date 1745818397053)
+@@ -1,0 +1,199 @@
++from app import db
++from datetime import datetime
++import sqlalchemy as sa
++
++
++class ArticleCategory(db.Model):
++    """
++    Модель категории артикулов.
++
++    Категории организуют артикулы в иерархическую структуру.
++    Каждая категория может иметь родительскую категорию и дочерние категории.
++    """
++    __tablename__ = 'article_category'
++
++    id = sa.Column(sa.Integer, primary_key=True)
++    name = sa.Column(sa.String(255), nullable=False)
++    code = sa.Column(sa.String(50), nullable=False, unique=True)
++    parent_id = sa.Column(sa.Integer, sa.ForeignKey('article_category.id'), nullable=True)
++    article_prefix = sa.Column(sa.String(10), nullable=False)
++    sequence_start = sa.Column(sa.Integer, default=1000)
++
++    parent = db.relationship('ArticleCategory', remote_side=[id], backref='subcategories')
++
++    def __repr__(self):
++        return f'<ArticleCategory {self.code}: {self.name}>'
++
++    def to_dict(self):
++        """Преобразование объекта в словарь для сериализации."""
++        return {
++            'id': self.id,
++            'name': self.name,
++            'code': self.code,
++            'parent_id': self.parent_id,
++            'article_prefix': self.article_prefix,
++            'sequence_start': self.sequence_start
++        }
++
++
++class ArticleAttribute(db.Model):
++    """
++    Модель атрибута артикула.
++
++    Атрибуты определяют дополнительные свойства артикулов.
++    Атрибуты могут быть общими для всех артикулов или специфичными для определенной категории.
++    """
++    __tablename__ = 'article_attribute'
++
++    id = sa.Column(sa.Integer, primary_key=True)
++    name = sa.Column(sa.String(255), nullable=False)
++    field_type = sa.Column(sa.String(50), nullable=False)  # string, integer, float, boolean, enum
++    required = sa.Column(sa.Boolean, default=False)
++    default_value = sa.Column(sa.String(255), nullable=True)
++    enum_values = sa.Column(sa.Text, nullable=True)  # JSON-строка для перечислений
++    category_id = sa.Column(sa.Integer, sa.ForeignKey('article_category.id'), nullable=True)
++
++    category = db.relationship('ArticleCategory', backref='attributes')
++
++    def __repr__(self):
++        return f'<ArticleAttribute {self.name} ({self.field_type})>'
++
++    def to_dict(self):
++        """Преобразование объекта в словарь для сериализации."""
++        return {
++            'id': self.id,
++            'name': self.name,
++            'field_type': self.field_type,
++            'required': self.required,
++            'default_value': self.default_value,
++            'enum_values': self.enum_values,
++            'category_id': self.category_id
++        }
++
++
++class Article(db.Model):
++    """
++    Модель артикула.
++
++    Представляет единицу номенклатуры в системе. Артикулы могут быть
++    различных типов: материалы, комплектующие, готовая продукция и т.д.
++    """
++    __tablename__ = 'article'
++
++    id = sa.Column(sa.Integer, primary_key=True)
++    article_code = sa.Column(sa.String(20), nullable=False, unique=True)
++    name = sa.Column(sa.String(255), nullable=False)
++    description = sa.Column(sa.Text, nullable=True)
++
++    # Связь с категорией
++    category_id = sa.Column(sa.Integer, sa.ForeignKey('article_category.id'), nullable=False)
++    category = db.relationship('ArticleCategory', backref='articles')
++
++    # Физические характеристики
++    weight = sa.Column(sa.Float, nullable=True)
++    length = sa.Column(sa.Float, nullable=True)
++    width = sa.Column(sa.Float, nullable=True)
++    height = sa.Column(sa.Float, nullable=True)
++
++    # Флаги и статусы
++    is_active = sa.Column(sa.Boolean, default=True)
++    is_purchasable = sa.Column(sa.Boolean, default=True)
++    is_sellable = sa.Column(sa.Boolean, default=True)
++    is_manufacturable = sa.Column(sa.Boolean, default=False)
++
++    # Метаданные
++    created_at = sa.Column(sa.DateTime, default=datetime.utcnow)
++    updated_at = sa.Column(sa.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
++
++    def __repr__(self):
++        return f'<Article {self.article_code}: {self.name}>'
++
++    def to_dict(self):
++        """Преобразование объекта в словарь для сериализации."""
++        return {
++            'id': self.id,
++            'article_code': self.article_code,
++            'name': self.name,
++            'description': self.description,
++            'category': {
++                'id': self.category.id,
++                'name': self.category.name
++            },
++            'dimensions': {
++                'length': self.length,
++                'width': self.width,
++                'height': self.height
++            },
++            'weight': self.weight,
++            'is_active': self.is_active,
++            'is_purchasable': self.is_purchasable,
++            'is_sellable': self.is_sellable,
++            'is_manufacturable': self.is_manufacturable,
++            'created_at': self.created_at.isoformat(),
++            'updated_at': self.updated_at.isoformat() if self.updated_at else None
++        }
++
++
++class ArticleAttributeValue(db.Model):
++    """
++    Модель значения атрибута артикула.
++
++    Связывает артикулы с атрибутами и хранит значения атрибутов для каждого артикула.
++    """
++    __tablename__ = 'article_attribute_value'
++
++    id = sa.Column(sa.Integer, primary_key=True)
++    article_id = sa.Column(sa.Integer, sa.ForeignKey('article.id'), nullable=False)
++    attribute_id = sa.Column(sa.Integer, sa.ForeignKey('article_attribute.id'), nullable=False)
++    value = sa.Column(sa.Text, nullable=True)
++
++    article = db.relationship('Article', backref='attribute_values')
++    attribute = db.relationship('ArticleAttribute')
++
++    def __repr__(self):
++        return f'<AttributeValue {self.attribute.name}: {self.value}>'
++
++    def to_dict(self):
++        """Преобразование объекта в словарь для сериализации."""
++        return {
++            'id': self.id,
++            'article_id': self.article_id,
++            'attribute': {
++                'id': self.attribute.id,
++                'name': self.attribute.name,
++                'field_type': self.attribute.field_type
++            },
++            'value': self.value
++        }
++
++
++class ArticleMedia(db.Model):
++    """
++    Модель медиафайла артикула.
++
++    Хранит информацию о медиафайлах, связанных с артикулами (фотографии, чертежи, документы).
++    """
++    __tablename__ = 'article_media'
++
++    id = sa.Column(sa.Integer, primary_key=True)
++    article_id = sa.Column(sa.Integer, sa.ForeignKey('article.id'), nullable=False)
++    media_type = sa.Column(sa.String(50), nullable=False)  # photo, drawing, scheme, document
++    file_path = sa.Column(sa.String(255), nullable=False)
++    file_name = sa.Column(sa.String(255), nullable=False)
++    upload_date = sa.Column(sa.DateTime, default=datetime.utcnow)
++
++    article = db.relationship('Article', backref='media_files')
++
++    def __repr__(self):
++        return f'<ArticleMedia {self.media_type}: {self.file_name}>'
++
++    def to_dict(self):
++        """Преобразование объекта в словарь для сериализации."""
++        return {
++            'id': self.id,
++            'article_id': self.article_id,
++            'media_type': self.media_type,
++            'file_name': self.file_name,
++            'file_path': self.file_path,
++            'upload_date': self.upload_date.isoformat()
++        }
+\ No newline at end of file
+Index: app/forms/__init__.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/forms/__init__.py b/app/forms/__init__.py
+--- a/app/forms/__init__.py	(revision 4fb812fe200da0a447af5a6708af9ac3a9ff9a83)
++++ b/app/forms/__init__.py	(date 1745818397054)
+@@ -1,0 +1,4 @@
++# Инициализация пакета форм
++
++# Импорт форм для удобства доступа из других модулей
++# Формы будут импортированы по мере их создания
+\ No newline at end of file
+Index: app/routes/articles.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/routes/articles.py b/app/routes/articles.py
+new file mode 100644
+--- /dev/null	(date 1745818397063)
++++ b/app/routes/articles.py	(date 1745818397063)
+@@ -0,0 +1,266 @@
++from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
++from app import db
++from app.models.article import Article, ArticleCategory, ArticleAttribute, ArticleAttributeValue, ArticleMedia
++from app.forms.article_forms import ArticleForm, ArticleCategoryForm, ArticleAttributeForm, ArticleMediaForm
++import os
++from werkzeug.utils import secure_filename
++from datetime import datetime
++
++articles_bp = Blueprint('articles', __name__, url_prefix='/articles')
++
++
++# Список артикулов
++@articles_bp.route('/', methods=['GET'])
++def index():
++    page = request.args.get('page', 1, type=int)
++    per_page = request.args.get('per_page', 20, type=int)
++
++    # Фильтры
++    category_id = request.args.get('category_id', type=int)
++    is_active = request.args.get('is_active', type=str)
++    search = request.args.get('search', type=str)
++
++    # Запрос
++    query = Article.query
++
++    # Применение фильтров
++    if category_id:
++        query = query.filter(Article.category_id == category_id)
++
++    if is_active:
++        is_active_bool = (is_active.lower() == 'true')
++        query = query.filter(Article.is_active == is_active_bool)
++
++    if search:
++        query = query.filter(
++            (Article.name.ilike(f'%{search}%')) |
++            (Article.article_code.ilike(f'%{search}%'))
++        )
++
++    # Пагинация
++    articles = query.order_by(Article.created_at.desc()).paginate(
++        page=page, per_page=per_page, error_out=False
++    )
++
++    # Получение категорий для фильтрации
++    categories = ArticleCategory.query.order_by(ArticleCategory.name).all()
++
++    return render_template(
++        'articles/index.html',
++        articles=articles,
++        categories=categories,
++        current_filters={
++            'category_id': category_id,
++            'is_active': is_active,
++            'search': search
++        }
++    )
++
++
++# Просмотр артикула
++@articles_bp.route('/<int:id>', methods=['GET'])
++def view(id):
++    article = Article.query.get_or_404(id)
++    return render_template('articles/view.html', article=article)
++
++
++# Создание артикула
++@articles_bp.route('/create', methods=['GET', 'POST'])
++def create():
++    form = ArticleForm()
++
++    if form.validate_on_submit():
++        # Создание артикула
++        article = Article(
++            name=form.name.data,
++            description=form.description.data,
++            category_id=form.category_id.data,
++            weight=form.weight.data,
++            length=form.length.data,
++            width=form.width.data,
++            height=form.height.data,
++            is_active=form.is_active.data,
++            is_purchasable=form.is_purchasable.data,
++            is_sellable=form.is_sellable.data,
++            is_manufacturable=form.is_manufacturable.data
++        )
++
++        # Генерация кода артикула
++        category = ArticleCategory.query.get(form.category_id.data)
++        if category:
++            # Получение последнего артикула в категории
++            last_article = Article.query.filter(
++                Article.category_id == category.id
++            ).order_by(Article.id.desc()).first()
++
++            # Определение нового номера
++            if last_article:
++                # Разбор последнего кода артикула для получения номера
++                try:
++                    prefix_len = len(category.article_prefix)
++                    last_num = int(last_article.article_code[prefix_len:])
++                    new_num = last_num + 1
++                except:
++                    # Если не удалось разобрать, начинаем с начального значения
++                    new_num = category.sequence_start
++            else:
++                new_num = category.sequence_start
++
++            # Формирование кода артикула
++            article.article_code = f"{category.article_prefix}{new_num:06d}"
++
++        db.session.add(article)
++        db.session.commit()
++
++        flash('Артикул успешно создан.', 'success')
++        return redirect(url_for('articles.view', id=article.id))
++
++    return render_template('articles/create.html', form=form)
++
++
++# Редактирование артикула
++@articles_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
++def edit(id):
++    article = Article.query.get_or_404(id)
++    form = ArticleForm(obj=article)
++
++    if form.validate_on_submit():
++        form.populate_obj(article)
++        article.updated_at = datetime.utcnow()
++
++        db.session.commit()
++        flash('Артикул успешно обновлен.', 'success')
++        return redirect(url_for('articles.view', id=article.id))
++
++    return render_template('articles/edit.html', form=form, article=article)
++
++
++# Удаление артикула
++@articles_bp.route('/<int:id>/delete', methods=['POST'])
++def delete(id):
++    article = Article.query.get_or_404(id)
++
++    try:
++        db.session.delete(article)
++        db.session.commit()
++        flash('Артикул успешно удален.', 'success')
++    except Exception as e:
++        db.session.rollback()
++        flash(f'Ошибка при удалении артикула: {str(e)}', 'danger')
++
++    return redirect(url_for('articles.index'))
++
++
++# Загрузка медиафайла для артикула
++@articles_bp.route('/<int:id>/media', methods=['GET', 'POST'])
++def upload_media(id):
++    article = Article.query.get_or_404(id)
++    form = ArticleMediaForm()
++
++    if form.validate_on_submit():
++        file = form.file.data
++        filename = secure_filename(file.filename)
++
++        # Создание директории для сохранения файлов, если она не существует
++        upload_dir = os.path.join('app', 'static', 'uploads', 'articles', str(article.id))
++        os.makedirs(upload_dir, exist_ok=True)
++
++        # Сохранение файла
++        file_path = os.path.join(upload_dir, filename)
++        file.save(file_path)
++
++        # Создание записи в базе данных
++        relative_path = os.path.join('uploads', 'articles', str(article.id), filename)
++        media = ArticleMedia(
++            article_id=article.id,
++            media_type=form.media_type.data,
++            file_path=relative_path,
++            file_name=filename
++        )
++
++        db.session.add(media)
++        db.session.commit()
++
++        flash('Файл успешно загружен.', 'success')
++        return redirect(url_for('articles.view', id=article.id))
++
++    return render_template('articles/upload_media.html', form=form, article=article)
++
++
++# Маршруты для работы с категориями артикулов
++
++# Список категорий артикулов
++@articles_bp.route('/categories', methods=['GET'])
++def category_index():
++    categories = ArticleCategory.query.order_by(ArticleCategory.name).all()
++    return render_template('articles/categories/index.html', categories=categories)
++
++
++# Создание категории артикулов
++@articles_bp.route('/categories/create', methods=['GET', 'POST'])
++def category_create():
++    form = ArticleCategoryForm()
++
++    if form.validate_on_submit():
++        # Проверка, что код категории уникален
++        existing = ArticleCategory.query.filter_by(code=form.code.data).first()
++        if existing:
++            flash('Категория с таким кодом уже существует.', 'danger')
++            return render_template('articles/categories/create.html', form=form)
++
++        # Создание категории
++        category = ArticleCategory(
++            name=form.name.data,
++            code=form.code.data,
++            article_prefix=form.article_prefix.data,
++            sequence_start=form.sequence_start.data
++        )
++
++        # Установка родительской категории, если выбрана
++        if form.parent_id.data > 0:
++            category.parent_id = form.parent_id.data
++
++        db.session.add(category)
++        db.session.commit()
++
++        flash('Категория успешно создана.', 'success')
++        return redirect(url_for('articles.category_index'))
++
++    return render_template('articles/categories/create.html', form=form)
++
++
++# Маршруты для работы с атрибутами артикулов
++
++# Список атрибутов артикулов
++@articles_bp.route('/attributes', methods=['GET'])
++def attribute_index():
++    attributes = ArticleAttribute.query.order_by(ArticleAttribute.name).all()
++    return render_template('articles/attributes/index.html', attributes=attributes)
++
++
++# Создание атрибута артикулов
++@articles_bp.route('/attributes/create', methods=['GET', 'POST'])
++def attribute_create():
++    form = ArticleAttributeForm()
++
++    if form.validate_on_submit():
++        # Создание атрибута
++        attribute = ArticleAttribute(
++            name=form.name.data,
++            field_type=form.field_type.data,
++            required=form.required.data,
++            default_value=form.default_value.data,
++            enum_values=form.enum_values.data
++        )
++
++        # Установка категории, если выбрана
++        if form.category_id.data > 0:
++            attribute.category_id = form.category_id.data
++
++        db.session.add(attribute)
++        db.session.commit()
++
++        flash('Атрибут успешно создан.', 'success')
++        return redirect(url_for('articles.attribute_index'))
++
++    return render_template('articles/attributes/create.html', form=form)
+\ No newline at end of file
+Index: app/forms/article_forms.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/forms/article_forms.py b/app/forms/article_forms.py
+new file mode 100644
+--- /dev/null	(date 1745818397060)
++++ b/app/forms/article_forms.py	(date 1745818397060)
+@@ -0,0 +1,119 @@
++from flask_wtf import FlaskForm
++from wtforms import StringField, TextAreaField, SelectField, FloatField, BooleanField, FileField
++from wtforms.validators import DataRequired, Length, Optional, NumberRange
++from app.models.article import ArticleCategory
++
++
++class ArticleCategoryForm(FlaskForm):
++    """Форма для создания и редактирования категорий артикулов."""
++
++    name = StringField('Наименование', validators=[
++        DataRequired(message='Наименование категории обязательно'),
++        Length(max=255, message='Наименование не должно превышать 255 символов')
++    ])
++
++    code = StringField('Код', validators=[
++        DataRequired(message='Код категории обязателен'),
++        Length(max=50, message='Код не должен превышать 50 символов')
++    ])
++
++    parent_id = SelectField('Родительская категория', coerce=int, validators=[Optional()])
++
++    article_prefix = StringField('Префикс артикулов', validators=[
++        DataRequired(message='Префикс артикулов обязателен'),
++        Length(max=10, message='Префикс не должен превышать 10 символов')
++    ])
++
++    sequence_start = StringField('Начальный номер последовательности', validators=[
++        DataRequired(message='Начальный номер обязателен')
++    ])
++
++    def __init__(self, *args, **kwargs):
++        super(ArticleCategoryForm, self).__init__(*args, **kwargs)
++        # Загрузка списка категорий
++        self.parent_id.choices = [(0, 'Нет (корневая категория)')] + [
++            (cat.id, cat.name) for cat in ArticleCategory.query.order_by(ArticleCategory.name).all()
++        ]
++
++
++class ArticleForm(FlaskForm):
++    """Форма для создания и редактирования артикулов."""
++
++    name = StringField('Наименование', validators=[
++        DataRequired(message='Наименование артикула обязательно'),
++        Length(max=255, message='Наименование не должно превышать 255 символов')
++    ])
++
++    description = TextAreaField('Описание', validators=[Optional()])
++
++    category_id = SelectField('Категория', coerce=int, validators=[
++        DataRequired(message='Категория обязательна')
++    ])
++
++    weight = FloatField('Вес (кг)', validators=[Optional()])
++
++    length = FloatField('Длина (мм)', validators=[Optional()])
++
++    width = FloatField('Ширина (мм)', validators=[Optional()])
++
++    height = FloatField('Высота (мм)', validators=[Optional()])
++
++    is_active = BooleanField('Активен', default=True)
++
++    is_purchasable = BooleanField('Доступен для закупки', default=True)
++
++    is_sellable = BooleanField('Доступен для продажи', default=True)
++
++    is_manufacturable = BooleanField('Производимый', default=False)
++
++    def __init__(self, *args, **kwargs):
++        super(ArticleForm, self).__init__(*args, **kwargs)
++        # Загрузка списка категорий
++        self.category_id.choices = [
++            (cat.id, cat.name) for cat in ArticleCategory.query.order_by(ArticleCategory.name).all()
++        ]
++
++
++class ArticleAttributeForm(FlaskForm):
++    """Форма для создания и редактирования атрибутов артикулов."""
++
++    name = StringField('Наименование', validators=[
++        DataRequired(message='Наименование атрибута обязательно'),
++        Length(max=255, message='Наименование не должно превышать 255 символов')
++    ])
++
++    field_type = SelectField('Тип поля', choices=[
++        ('string', 'Строка'),
++        ('integer', 'Целое число'),
++        ('float', 'Число с плавающей точкой'),
++        ('boolean', 'Логическое значение'),
++        ('enum', 'Перечисление')
++    ], validators=[DataRequired(message='Тип поля обязателен')])
++
++    required = BooleanField('Обязательное поле', default=False)
++
++    default_value = StringField('Значение по умолчанию', validators=[Optional()])
++
++    enum_values = TextAreaField('Значения перечисления (по одному в строке)', validators=[Optional()])
++
++    category_id = SelectField('Категория', coerce=int, validators=[Optional()])
++
++    def __init__(self, *args, **kwargs):
++        super(ArticleAttributeForm, self).__init__(*args, **kwargs)
++        # Загрузка списка категорий
++        self.category_id.choices = [(0, 'Все категории')] + [
++            (cat.id, cat.name) for cat in ArticleCategory.query.order_by(ArticleCategory.name).all()
++        ]
++
++
++class ArticleMediaForm(FlaskForm):
++    """Форма для загрузки медиафайлов артикулов."""
++
++    media_type = SelectField('Тип медиафайла', choices=[
++        ('photo', 'Фотография'),
++        ('drawing', 'Чертеж'),
++        ('scheme', 'Схема'),
++        ('document', 'Документ')
++    ], validators=[DataRequired(message='Тип медиафайла обязателен')])
++
++    file = FileField('Файл', validators=[DataRequired(message='Файл обязателен')])
+\ No newline at end of file
+Index: app/templates/articles/create.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/templates/articles/create.html b/app/templates/articles/create.html
+new file mode 100644
+--- /dev/null	(date 1745818397068)
++++ b/app/templates/articles/create.html	(date 1745818397068)
+@@ -0,0 +1,165 @@
++{% extends 'base.html' %}
++
++{% block title %}Создание артикула | ERP VITTAVENTO{% endblock %}
++
++{% block content %}
++<div class="container">
++    <h1 class="my-4">Создание артикула</h1>
++
++    <div class="card shadow-sm">
++        <div class="card-body">
++            <form method="POST" action="{{ url_for('articles.create') }}">
++                {{ form.csrf_token }}
++
++                <div class="row mb-3">
++                    <div class="col-md-8">
++                        <div class="mb-3">
++                            <label for="name" class="form-label">Наименование *</label>
++                            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
++                            {% if form.name.errors %}
++                                <div class="invalid-feedback">
++                                    {% for error in form.name.errors %}
++                                        {{ error }}
++                                    {% endfor %}
++                                </div>
++                            {% endif %}
++                        </div>
++                    </div>
++                    <div class="col-md-4">
++                        <div class="mb-3">
++                            <label for="category_id" class="form-label">Категория *</label>
++                            {{ form.category_id(class="form-select" + (" is-invalid" if form.category_id.errors else "")) }}
++                            {% if form.category_id.errors %}
++                                <div class="invalid-feedback">
++                                    {% for error in form.category_id.errors %}
++                                        {{ error }}
++                                    {% endfor %}
++                                </div>
++                            {% endif %}
++                        </div>
++                    </div>
++                </div>
++
++                <div class="mb-3">
++                    <label for="description" class="form-label">Описание</label>
++                    {{ form.description(class="form-control", rows=4) }}
++                    <small class="text-muted">Подробное описание артикула (опционально)</small>
++                </div>
++
++                <div class="card mb-4">
++                    <div class="card-header">
++                        <h5 class="mb-0">Физические характеристики</h5>
++                    </div>
++                    <div class="card-body">
++                        <div class="row">
++                            <div class="col-md-3">
++                                <div class="mb-3">
++                                    <label for="weight" class="form-label">Вес (кг)</label>
++                                    {{ form.weight(class="form-control" + (" is-invalid" if form.weight.errors else ""), step="0.001") }}
++                                    {% if form.weight.errors %}
++                                        <div class="invalid-feedback">
++                                            {% for error in form.weight.errors %}
++                                                {{ error }}
++                                            {% endfor %}
++                                        </div>
++                                    {% endif %}
++                                </div>
++                            </div>
++                            <div class="col-md-3">
++                                <div class="mb-3">
++                                    <label for="length" class="form-label">Длина (мм)</label>
++                                    {{ form.length(class="form-control" + (" is-invalid" if form.length.errors else ""), step="0.1") }}
++                                    {% if form.length.errors %}
++                                        <div class="invalid-feedback">
++                                            {% for error in form.length.errors %}
++                                                {{ error }}
++                                            {% endfor %}
++                                        </div>
++                                    {% endif %}
++                                </div>
++                            </div>
++                            <div class="col-md-3">
++                                <div class="mb-3">
++                                    <label for="width" class="form-label">Ширина (мм)</label>
++                                    {{ form.width(class="form-control" + (" is-invalid" if form.width.errors else ""), step="0.1") }}
++                                    {% if form.width.errors %}
++                                        <div class="invalid-feedback">
++                                            {% for error in form.width.errors %}
++                                                {{ error }}
++                                            {% endfor %}
++                                        </div>
++                                    {% endif %}
++                                </div>
++                            </div>
++                            <div class="col-md-3">
++                                <div class="mb-3">
++                                    <label for="height" class="form-label">Высота (мм)</label>
++                                    {{ form.height(class="form-control" + (" is-invalid" if form.height.errors else ""), step="0.1") }}
++                                    {% if form.height.errors %}
++                                        <div class="invalid-feedback">
++                                            {% for error in form.height.errors %}
++                                                {{ error }}
++                                            {% endfor %}
++                                        </div>
++                                    {% endif %}
++                                </div>
++                            </div>
++                        </div>
++                    </div>
++                </div>
++
++                <div class="card mb-4">
++                    <div class="card-header">
++                        <h5 class="mb-0">Настройки</h5>
++                    </div>
++                    <div class="card-body">
++                        <div class="row">
++                            <div class="col-md-3">
++                                <div class="form-check mb-3">
++                                    {{ form.is_active(class="form-check-input") }}
++                                    <label class="form-check-label" for="is_active">
++                                        Активен
++                                    </label>
++                                </div>
++                            </div>
++                            <div class="col-md-3">
++                                <div class="form-check mb-3">
++                                    {{ form.is_purchasable(class="form-check-input") }}
++                                    <label class="form-check-label" for="is_purchasable">
++                                        Доступен для закупки
++                                    </label>
++                                </div>
++                            </div>
++                            <div class="col-md-3">
++                                <div class="form-check mb-3">
++                                    {{ form.is_sellable(class="form-check-input") }}
++                                    <label class="form-check-label" for="is_sellable">
++                                        Доступен для продажи
++                                    </label>
++                                </div>
++                            </div>
++                            <div class="col-md-3">
++                                <div class="form-check mb-3">
++                                    {{ form.is_manufacturable(class="form-check-input") }}
++                                    <label class="form-check-label" for="is_manufacturable">
++                                        Производимый
++                                    </label>
++                                </div>
++                            </div>
++                        </div>
++                    </div>
++                </div>
++
++                <div class="mt-4">
++                    <a href="{{ url_for('articles.index') }}" class="btn btn-secondary">
++                        <i class="fas fa-times"></i> Отмена
++                    </a>
++                    <button type="submit" class="btn btn-success">
++                        <i class="fas fa-save"></i> Сохранить
++                    </button>
++                </div>
++            </form>
++        </div>
++    </div>
++</div>
++{% endblock %}
+\ No newline at end of file
+Index: logs/erp_vittavento.log
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>2025-04-25 00:12:12,126 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:109]\n2025-04-25 00:14:24,420 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:109]\n2025-04-25 00:14:24,741 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:109]\n2025-04-25 00:20:45,035 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:109]\n2025-04-25 00:22:20,417 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:110]\n2025-04-25 00:22:53,534 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:113]\n2025-04-25 00:23:55,187 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:113]\n2025-04-25 00:24:28,264 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:113]\n2025-04-25 00:24:28,582 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:113]\n2025-04-25 00:24:32,643 WARNING: 404 ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again. [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:146]\n2025-04-25 00:40:32,720 WARNING: 404 ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again. [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:146]\n2025-04-25 11:43:02,235 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:113]\n2025-04-25 11:43:02,669 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:113]\n2025-04-26 00:03:35,442 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:113]\n2025-04-26 00:03:35,661 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:113]\n2025-04-26 00:05:01,421 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:113]\n2025-04-26 00:05:01,638 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:113]\n2025-04-26 00:05:07,057 WARNING: 404 ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again. [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:146]\n2025-04-26 00:12:46,417 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:113]\n2025-04-26 00:12:46,634 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:113]\n2025-04-26 01:32:33,514 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-26 01:32:33,519 ERROR: Ошибка при инициализации модуля артикулов: Cannot create a consistent method resolution order (MRO) for bases Model, BaseModel, TimestampMixin [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:138]\n2025-04-26 01:32:33,749 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-26 01:32:33,752 ERROR: Ошибка при инициализации модуля артикулов: Cannot create a consistent method resolution order (MRO) for bases Model, BaseModel, TimestampMixin [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:138]\n2025-04-26 01:33:42,996 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-26 01:33:42,999 ERROR: Ошибка при инициализации модуля артикулов: Cannot create a consistent method resolution order (MRO) for bases Model, BaseModel, TimestampMixin [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:138]\n2025-04-26 02:02:12,316 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-26 02:02:12,325 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]\n2025-04-26 02:02:12,555 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-26 02:02:12,561 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]\n2025-04-26 02:04:46,224 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-26 02:04:46,231 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]\n2025-04-26 02:05:19,111 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-26 02:05:19,118 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]\n2025-04-26 02:05:35,724 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-26 02:05:35,730 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]\n2025-04-26 23:05:51,533 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-26 23:05:51,539 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]\n2025-04-26 23:05:51,921 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-26 23:05:51,928 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]\n2025-04-26 23:47:05,106 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-26 23:47:05,107 ERROR: Ошибка при инициализации модуля артикулов: cannot import name 'init_app' from 'app.modules.articles' (/Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py) [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:138]\n2025-04-26 23:47:14,775 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-26 23:47:14,782 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]\n2025-04-26 23:47:14,782 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]\n2025-04-26 23:48:01,167 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-26 23:48:01,169 ERROR: Ошибка при инициализации модуля артикулов: cannot import name 'Article' from 'app.modules.articles.models' (/Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/models.py) [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:138]\n2025-04-26 23:48:11,848 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-26 23:48:11,852 ERROR: Ошибка при инициализации модуля артикулов: cannot import name 'ArticleAttribute' from 'app.modules.articles.models' (/Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/models.py) [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:138]\n2025-04-26 23:49:01,397 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-26 23:49:01,399 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]\n2025-04-26 23:49:01,399 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]\n2025-04-26 23:49:15,133 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-26 23:49:15,136 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]\n2025-04-26 23:49:15,136 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]\n2025-04-26 23:56:18,923 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-26 23:56:18,926 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]\n2025-04-26 23:56:18,926 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]\n2025-04-27 00:00:14,091 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-27 00:00:14,095 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]\n2025-04-27 00:00:14,095 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]\n2025-04-27 00:00:23,763 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-27 00:00:23,766 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]\n2025-04-27 00:00:23,766 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]\n2025-04-27 00:12:19,169 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-27 00:12:19,172 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]\n2025-04-27 00:12:19,172 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]\n2025-04-27 00:12:19,545 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-27 00:12:19,548 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]\n2025-04-27 00:12:19,548 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]\n2025-04-27 00:13:07,237 WARNING: 404 ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again. [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:156]\n2025-04-27 00:23:54,034 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-27 00:23:54,037 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]\n2025-04-27 00:23:54,037 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]\n2025-04-27 00:23:54,266 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-27 00:23:54,269 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]\n2025-04-27 00:23:54,269 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]\n2025-04-27 00:23:54,517 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-27 00:23:54,520 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]\n2025-04-27 00:23:54,520 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]\n2025-04-27 00:24:20,496 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-27 00:24:20,499 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]\n2025-04-27 00:24:20,499 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]\n2025-04-27 00:24:20,721 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-27 00:24:20,724 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]\n2025-04-27 00:24:20,724 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]\n2025-04-27 00:37:00,054 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-27 00:37:00,057 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]\n2025-04-27 00:37:00,057 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]\n2025-04-27 00:37:00,438 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]\n2025-04-27 00:37:00,441 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]\n2025-04-27 00:37:00,441 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/logs/erp_vittavento.log b/logs/erp_vittavento.log
+--- a/logs/erp_vittavento.log	(revision 4fb812fe200da0a447af5a6708af9ac3a9ff9a83)
++++ b/logs/erp_vittavento.log	(date 1745818406056)
+@@ -90,3 +90,95 @@
+ 2025-04-27 00:37:00,438 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
+ 2025-04-27 00:37:00,441 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
+ 2025-04-27 00:37:00,441 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-27 23:16:45,281 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-27 23:16:45,285 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-27 23:16:45,285 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-27 23:24:44,401 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-27 23:24:44,404 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-27 23:24:44,404 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-27 23:24:44,780 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-27 23:24:44,783 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-27 23:24:44,783 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-27 23:26:11,711 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-27 23:26:11,715 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-27 23:26:11,715 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-27 23:26:12,127 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-27 23:26:12,130 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-27 23:26:12,130 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-27 23:37:32,345 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-27 23:37:32,348 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-27 23:37:32,348 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-27 23:37:32,761 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-27 23:37:32,764 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-27 23:37:32,764 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-27 23:44:59,288 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-27 23:44:59,291 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-27 23:44:59,291 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-27 23:50:32,696 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-27 23:50:32,699 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-27 23:50:32,699 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-27 23:50:41,819 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-27 23:50:41,822 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-27 23:50:41,822 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-27 23:50:42,228 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-27 23:50:42,231 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-27 23:50:42,231 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-27 23:55:36,812 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-27 23:55:36,815 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-27 23:55:36,815 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-27 23:56:03,030 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-27 23:56:03,033 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-27 23:56:03,033 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-27 23:56:03,413 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-27 23:56:03,416 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-27 23:56:03,416 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-27 23:56:06,747 WARNING: 404 ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again. [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:156]
++2025-04-27 23:56:06,797 WARNING: 404 ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again. [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:156]
++2025-04-27 23:56:55,452 WARNING: 404 ошибка: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again. [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:156]
++2025-04-28 00:06:22,310 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-28 00:06:22,312 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-28 00:06:22,313 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-28 00:35:05,356 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-28 00:35:05,360 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-28 00:35:05,360 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-28 00:35:05,740 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-28 00:35:05,743 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-28 00:35:05,743 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-28 00:55:31,703 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-28 00:55:31,707 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-28 00:55:31,707 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-28 00:59:52,790 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-28 00:59:52,793 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-28 00:59:52,793 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-28 01:00:36,114 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-28 01:00:36,118 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-28 01:00:36,118 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-28 01:00:53,106 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-28 01:00:53,109 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-28 01:00:53,109 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-28 01:00:53,535 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-28 01:00:53,539 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-28 01:00:53,539 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-28 01:19:31,805 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-28 01:19:31,809 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-28 01:19:31,809 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-28 01:23:57,799 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-28 01:23:57,803 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-28 01:23:57,803 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-28 01:24:05,661 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-28 01:24:05,664 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-28 01:24:05,664 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-28 01:24:06,061 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-28 01:24:06,064 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-28 01:24:06,064 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-28 01:30:20,349 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-28 01:30:20,350 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/modules/articles/__init__.py:34]
++2025-04-28 01:30:20,350 INFO: Модуль артикулов успешно инициализирован [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:136]
++2025-04-28 01:30:32,033 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-28 01:30:32,034 ERROR: Ошибка при инициализации модуля артикулов: name 'articles_bp' is not defined [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:138]
++2025-04-28 01:33:17,892 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-28 01:33:17,893 ERROR: Ошибка при инициализации модуля артикулов: name 'articles_bp' is not defined [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:138]
++2025-04-28 01:33:25,653 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-28 01:33:25,654 ERROR: Ошибка при инициализации модуля артикулов: name 'articles_bp' is not defined [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:138]
++2025-04-28 01:33:26,055 INFO: ERP_VITTAVENTO запущена [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:116]
++2025-04-28 01:33:26,056 ERROR: Ошибка при инициализации модуля артикулов: name 'articles_bp' is not defined [in /Users/alekseyglumov/Projects/ERP_VITTAVENTO/app/__init__.py:138]
+Index: .idea/workspace.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project version=\"4\">\n  <component name=\"AutoImportSettings\">\n    <option name=\"autoReloadType\" value=\"SELECTIVE\" />\n  </component>\n  <component name=\"ChangeListManager\">\n    <list default=\"true\" id=\"b0322003-5220-4f74-b382-b542cedb6956\" name=\"Changes\" comment=\"\">\n      <change afterPath=\"$PROJECT_DIR$/app/models/article.py\" afterDir=\"false\" />\n      <change afterPath=\"$PROJECT_DIR$/app/modules/articles/__init__.py\" afterDir=\"false\" />\n      <change afterPath=\"$PROJECT_DIR$/app/modules/articles/forms.py\" afterDir=\"false\" />\n      <change afterPath=\"$PROJECT_DIR$/app/modules/articles/models.py\" afterDir=\"false\" />\n      <change afterPath=\"$PROJECT_DIR$/app/modules/articles/routes.py\" afterDir=\"false\" />\n      <change afterPath=\"$PROJECT_DIR$/app/modules/articles/templates/articles/attributes/create.html\" afterDir=\"false\" />\n      <change afterPath=\"$PROJECT_DIR$/app/modules/articles/templates/articles/attributes/index.html\" afterDir=\"false\" />\n      <change afterPath=\"$PROJECT_DIR$/app/modules/articles/templates/articles/categories/create.html\" afterDir=\"false\" />\n      <change afterPath=\"$PROJECT_DIR$/app/modules/articles/templates/articles/categories/index.html\" afterDir=\"false\" />\n      <change afterPath=\"$PROJECT_DIR$/app/modules/articles/templates/articles/create.html\" afterDir=\"false\" />\n      <change afterPath=\"$PROJECT_DIR$/app/modules/articles/templates/articles/edit.html\" afterDir=\"false\" />\n      <change afterPath=\"$PROJECT_DIR$/app/modules/articles/templates/articles/index.html\" afterDir=\"false\" />\n      <change afterPath=\"$PROJECT_DIR$/app/modules/articles/templates/articles/upload_media.html\" afterDir=\"false\" />\n      <change afterPath=\"$PROJECT_DIR$/app/modules/articles/templates/articles/viev.html\" afterDir=\"false\" />\n      <change afterPath=\"$PROJECT_DIR$/app/templates/error/404.html\" afterDir=\"false\" />\n      <change afterPath=\"$PROJECT_DIR$/app/templates/error/500.html\" afterDir=\"false\" />\n      <change afterPath=\"$PROJECT_DIR$/requirements-minimal.txt\" afterDir=\"false\" />\n      <change afterPath=\"$PROJECT_DIR$/seed_data.py\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/.idea/workspace.xml\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/.idea/workspace.xml\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/app/__init__.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/app/__init__.py\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/app/models/base.py\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/app/models/base.py\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/app/templates/index.html\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/app/templates/index.html\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/logs/erp_vittavento.log\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/logs/erp_vittavento.log\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/requirements.txt\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/requirements.txt\" afterDir=\"false\" />\n    </list>\n    <option name=\"SHOW_DIALOG\" value=\"false\" />\n    <option name=\"HIGHLIGHT_CONFLICTS\" value=\"true\" />\n    <option name=\"HIGHLIGHT_NON_ACTIVE_CHANGELIST\" value=\"false\" />\n    <option name=\"LAST_RESOLUTION\" value=\"IGNORE\" />\n  </component>\n  <component name=\"FileTemplateManagerImpl\">\n    <option name=\"RECENT_TEMPLATES\">\n      <list>\n        <option value=\"CSS File\" />\n        <option value=\"JavaScript File\" />\n        <option value=\"Python Script\" />\n        <option value=\"HTML File\" />\n      </list>\n    </option>\n  </component>\n  <component name=\"Git.Settings\">\n    <option name=\"RECENT_GIT_ROOT_PATH\" value=\"$PROJECT_DIR$\" />\n  </component>\n  <component name=\"ProjectColorInfo\">{\n  &quot;associatedIndex&quot;: 7\n}</component>\n  <component name=\"ProjectId\" id=\"2wCLPbnQ3YlQoToBVulXUGXPuiu\" />\n  <component name=\"ProjectLevelVcsManager\" settingsEditedManually=\"true\" />\n  <component name=\"ProjectViewState\">\n    <option name=\"hideEmptyMiddlePackages\" value=\"true\" />\n    <option name=\"showLibraryContents\" value=\"true\" />\n  </component>\n  <component name=\"PropertiesComponent\"><![CDATA[{\n  \"keyToString\": {\n    \"DefaultHtmlFileTemplate\": \"HTML File\",\n    \"Python.__init__.executor\": \"Run\",\n    \"Python.models.executor\": \"Run\",\n    \"Python.run.executor\": \"Run\",\n    \"RunOnceActivity.ShowReadmeOnStart\": \"true\",\n    \"RunOnceActivity.git.unshallow\": \"true\",\n    \"git-widget-placeholder\": \"feature/article__module\",\n    \"list.type.of.created.stylesheet\": \"CSS\",\n    \"node.js.detected.package.eslint\": \"true\",\n    \"node.js.detected.package.tslint\": \"true\",\n    \"node.js.selected.package.eslint\": \"(autodetect)\",\n    \"node.js.selected.package.tslint\": \"(autodetect)\",\n    \"nodejs_package_manager_path\": \"npm\",\n    \"settings.editor.selected.configurable\": \"settings.sync\",\n    \"vue.rearranger.settings.migration\": \"true\"\n  }\n}]]></component>\n  <component name=\"SharedIndexes\">\n    <attachedChunks>\n      <set>\n        <option value=\"bundled-js-predefined-d6986cc7102b-1632447f56bf-JavaScript-PY-243.26053.29\" />\n        <option value=\"bundled-python-sdk-b1dbf8ef85a6-4df51de95216-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-243.26053.29\" />\n      </set>\n    </attachedChunks>\n  </component>\n  <component name=\"SpellCheckerSettings\" RuntimeDictionaries=\"0\" Folders=\"0\" CustomDictionaries=\"0\" DefaultDictionary=\"application-level\" UseSingleDictionary=\"true\" transferred=\"true\" />\n  <component name=\"TaskManager\">\n    <task active=\"true\" id=\"Default\" summary=\"Default task\">\n      <changelist id=\"b0322003-5220-4f74-b382-b542cedb6956\" name=\"Changes\" comment=\"\" />\n      <created>1745540585567</created>\n      <option name=\"number\" value=\"Default\" />\n      <option name=\"presentableId\" value=\"Default\" />\n      <updated>1745540585567</updated>\n      <workItem from=\"1745540586577\" duration=\"11282000\" />\n      <workItem from=\"1745595697072\" duration=\"633000\" />\n    </task>\n    <servers />\n  </component>\n  <component name=\"TypeScriptGeneratedFilesManager\">\n    <option name=\"version\" value=\"3\" />\n  </component>\n  <component name=\"Vcs.Log.Tabs.Properties\">\n    <option name=\"TAB_STATES\">\n      <map>\n        <entry key=\"MAIN\">\n          <value>\n            <State />\n          </value>\n        </entry>\n      </map>\n    </option>\n  </component>\n  <component name=\"com.intellij.coverage.CoverageDataManagerImpl\">\n    <SUITE FILE_PATH=\"coverage/ERP_VITTAVENTO$articles.coverage\" NAME=\"articles Coverage Results\" MODIFIED=\"1745601981282\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/app/routes\" />\n    <SUITE FILE_PATH=\"coverage/ERP_VITTAVENTO$__init__.coverage\" NAME=\"__init__ Coverage Results\" MODIFIED=\"1745555053121\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/app/models\" />\n    <SUITE FILE_PATH=\"coverage/ERP_VITTAVENTO$models.coverage\" NAME=\"models Coverage Results\" MODIFIED=\"1745723135126\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$/app/modules/articles\" />\n    <SUITE FILE_PATH=\"coverage/ERP_VITTAVENTO$run.coverage\" NAME=\"run Coverage Results\" MODIFIED=\"1745727138837\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"coverage.py\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\" WORKING_DIRECTORY=\"$PROJECT_DIR$\" />\n  </component>\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/workspace.xml b/.idea/workspace.xml
+--- a/.idea/workspace.xml	(revision 4fb812fe200da0a447af5a6708af9ac3a9ff9a83)
++++ b/.idea/workspace.xml	(date 1745818397067)
+@@ -5,30 +5,16 @@
+   </component>
+   <component name="ChangeListManager">
+     <list default="true" id="b0322003-5220-4f74-b382-b542cedb6956" name="Changes" comment="">
+-      <change afterPath="$PROJECT_DIR$/app/models/article.py" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/app/modules/articles/__init__.py" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/app/modules/articles/forms.py" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/app/modules/articles/models.py" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/app/modules/articles/routes.py" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/app/modules/articles/templates/articles/attributes/create.html" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/app/modules/articles/templates/articles/attributes/index.html" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/app/modules/articles/templates/articles/categories/create.html" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/app/modules/articles/templates/articles/categories/index.html" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/app/modules/articles/templates/articles/create.html" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/app/modules/articles/templates/articles/edit.html" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/app/modules/articles/templates/articles/index.html" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/app/modules/articles/templates/articles/upload_media.html" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/app/modules/articles/templates/articles/viev.html" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/app/templates/error/404.html" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/app/templates/error/500.html" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/requirements-minimal.txt" afterDir="false" />
+-      <change afterPath="$PROJECT_DIR$/seed_data.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/app/forms/article_forms.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/app/routes/articles.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/app/templates/articles/create.html" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/app/templates/articles/index.html" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/app/templates/articles/viev.html" afterDir="false" />
+       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/app/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/__init__.py" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/app/models/base.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/base.py" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/app/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/index.html" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/app/forms/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/forms/__init__.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/app/models/article.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/article.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/app/modules/articles/routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/modules/articles/routes.py" afterDir="false" />
+       <change beforePath="$PROJECT_DIR$/logs/erp_vittavento.log" beforeDir="false" afterPath="$PROJECT_DIR$/logs/erp_vittavento.log" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+     </list>
+     <option name="SHOW_DIALOG" value="false" />
+     <option name="HIGHLIGHT_CONFLICTS" value="true" />
+@@ -61,11 +47,12 @@
+   "keyToString": {
+     "DefaultHtmlFileTemplate": "HTML File",
+     "Python.__init__.executor": "Run",
++    "Python.articles.executor": "Run",
+     "Python.models.executor": "Run",
+     "Python.run.executor": "Run",
+     "RunOnceActivity.ShowReadmeOnStart": "true",
+     "RunOnceActivity.git.unshallow": "true",
+-    "git-widget-placeholder": "feature/article__module",
++    "git-widget-placeholder": "4fb812fe",
+     "list.type.of.created.stylesheet": "CSS",
+     "node.js.detected.package.eslint": "true",
+     "node.js.detected.package.tslint": "true",
+@@ -105,16 +92,28 @@
+       <map>
+         <entry key="MAIN">
+           <value>
+-            <State />
++            <State>
++              <option name="FILTERS">
++                <map>
++                  <entry key="branch">
++                    <value>
++                      <list>
++                        <option value="HEAD" />
++                      </list>
++                    </value>
++                  </entry>
++                </map>
++              </option>
++            </State>
+           </value>
+         </entry>
+       </map>
+     </option>
+   </component>
+   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+-    <SUITE FILE_PATH="coverage/ERP_VITTAVENTO$articles.coverage" NAME="articles Coverage Results" MODIFIED="1745601981282" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/app/routes" />
++    <SUITE FILE_PATH="coverage/ERP_VITTAVENTO$articles.coverage" NAME="articles Coverage Results" MODIFIED="1745811918231" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/app/routes" />
+     <SUITE FILE_PATH="coverage/ERP_VITTAVENTO$__init__.coverage" NAME="__init__ Coverage Results" MODIFIED="1745555053121" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/app/models" />
+     <SUITE FILE_PATH="coverage/ERP_VITTAVENTO$models.coverage" NAME="models Coverage Results" MODIFIED="1745723135126" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/app/modules/articles" />
+-    <SUITE FILE_PATH="coverage/ERP_VITTAVENTO$run.coverage" NAME="run Coverage Results" MODIFIED="1745727138837" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
++    <SUITE FILE_PATH="coverage/ERP_VITTAVENTO$run.coverage" NAME="run Coverage Results" MODIFIED="1745817845318" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+   </component>
+ </project>
+\ No newline at end of file
+Index: app/templates/articles/viev.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/templates/articles/viev.html b/app/templates/articles/viev.html
+new file mode 100644
+--- /dev/null	(date 1745818397058)
++++ b/app/templates/articles/viev.html	(date 1745818397058)
+@@ -0,0 +1,230 @@
++{% extends 'base.html' %}
++
++{% block title %}{{ article.name }} | ERP VITTAVENTO{% endblock %}
++
++{% block content %}
++<div class="container">
++    <h1 class="my-4">{{ article.name }}</h1>
++
++    <div class="row">
++        <div class="col-md-8">
++            <div class="card shadow-sm mb-4">
++                <div class="card-header">
++                    <h5 class="mb-0">Основная информация</h5>
++                </div>
++                <div class="card-body">
++                    <table class="table">
++                        <tr>
++                            <th style="width: 30%">Код артикула:</th>
++                            <td>{{ article.article_code }}</td>
++                        </tr>
++                        <tr>
++                            <th>Наименование:</th>
++                            <td>{{ article.name }}</td>
++                        </tr>
++                        <tr>
++                            <th>Категория:</th>
++                            <td>{{ article.category.name }}</td>
++                        </tr>
++                        <tr>
++                            <th>Описание:</th>
++                            <td>{{ article.description or 'Не указано' }}</td>
++                        </tr>
++                    </table>
++                </div>
++            </div>
++
++            <div class="card shadow-sm mb-4">
++                <div class="card-header">
++                    <h5 class="mb-0">Физические характеристики</h5>
++                </div>
++                <div class="card-body">
++                    <div class="row">
++                        <div class="col-md-6">
++                            <table class="table">
++                                <tr>
++                                    <th>Вес:</th>
++                                    <td>{{ article.weight|default('Не указан', true) }} кг</td>
++                                </tr>
++                                <tr>
++                                    <th>Длина:</th>
++                                    <td>{{ article.length|default('Не указана', true) }} мм</td>
++                                </tr>
++                            </table>
++                        </div>
++                        <div class="col-md-6">
++                            <table class="table">
++                                <tr>
++                                    <th>Ширина:</th>
++                                    <td>{{ article.width|default('Не указана', true) }} мм</td>
++                                </tr>
++                                <tr>
++                                    <th>Высота:</th>
++                                    <td>{{ article.height|default('Не указана', true) }} мм</td>
++                                </tr>
++                            </table>
++                        </div>
++                    </div>
++                </div>
++            </div>
++
++            <div class="card shadow-sm mb-4">
++                <div class="card-header">
++                    <h5 class="mb-0">Настройки</h5>
++                </div>
++                <div class="card-body">
++                    <div class="row">
++                        <div class="col-md-6">
++                            <div class="mb-3">
++                                <span class="badge {{ article.is_active ? 'bg-success' : 'bg-secondary' }} p-2">
++                                    <i class="fas {{ article.is_active ? 'fa-check' : 'fa-times' }}"></i>
++                                    {{ article.is_active ? 'Активен' : 'Неактивен' }}
++                                </span>
++                            </div>
++                            <div class="mb-3">
++                                <span class="badge {{ article.is_purchasable ? 'bg-info' : 'bg-secondary' }} p-2">
++                                    <i class="fas {{ article.is_purchasable ? 'fa-check' : 'fa-times' }}"></i>
++                                    {{ article.is_purchasable ? 'Доступен для закупки' : 'Недоступен для закупки' }}
++                                </span>
++                            </div>
++                        </div>
++                        <div class="col-md-6">
++                            <div class="mb-3">
++                                <span class="badge {{ article.is_sellable ? 'bg-warning' : 'bg-secondary' }} p-2">
++                                    <i class="fas {{ article.is_sellable ? 'fa-check' : 'fa-times' }}"></i>
++                                    {{ article.is_sellable ? 'Доступен для продажи' : 'Недоступен для продажи' }}
++                                </span>
++                            </div>
++                            <div class="mb-3">
++                                <span class="badge {{ article.is_manufacturable ? 'bg-primary' : 'bg-secondary' }} p-2">
++                                    <i class="fas {{ article.is_manufacturable ? 'fa-check' : 'fa-times' }}"></i>
++                                    {{ article.is_manufacturable ? 'Производимый' : 'Не производимый' }}
++                                </span>
++                            </div>
++                        </div>
++                    </div>
++                </div>
++            </div>
++
++            <!-- Атрибуты артикула -->
++            {% if article.attribute_values %}
++            <div class="card shadow-sm mb-4">
++                <div class="card-header">
++                    <h5 class="mb-0">Атрибуты</h5>
++                </div>
++                <div class="card-body">
++                    <table class="table">
++                        <thead>
++                            <tr>
++                                <th>Атрибут</th>
++                                <th>Значение</th>
++                            </tr>
++                        </thead>
++                        <tbody>
++                            {% for attribute_value in article.attribute_values %}
++                            <tr>
++                                <td>{{ attribute_value.attribute.name }}</td>
++                                <td>{{ attribute_value.value }}</td>
++                            </tr>
++                            {% endfor %}
++                        </tbody>
++                    </table>
++                </div>
++            </div>
++            {% endif %}
++        </div>
++
++        <div class="col-md-4">
++            <!-- Метаданные -->
++            <div class="card shadow-sm mb-4">
++                <div class="card-header">
++                    <h5 class="mb-0">Метаданные</h5>
++                </div>
++                <div class="card-body">
++                    <table class="table">
++                        <tr>
++                            <th>Создан:</th>
++                            <td>{{ article.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
++                        </tr>
++                        <tr>
++                            <th>Обновлен:</th>
++                            <td>{{ article.updated_at.strftime('%d.%m.%Y %H:%M') }}</td>
++                        </tr>
++                    </table>
++                </div>
++            </div>
++
++            <!-- Медиафайлы -->
++            <div class="card shadow-sm mb-4">
++                <div class="card-header d-flex justify-content-between align-items-center">
++                    <h5 class="mb-0">Медиафайлы</h5>
++                    <a href="{{ url_for('articles.upload_media', id=article.id) }}" class="btn btn-sm btn-primary">
++                        <i class="fas fa-upload"></i> Загрузить
++                    </a>
++                </div>
++                <div class="card-body">
++                    {% if article.media_files %}
++                    <div class="article-media">
++                        {% for media in article.media_files %}
++                        <div class="card mb-2">
++                            {% if media.media_type == 'photo' %}
++                            <img src="{{ url_for('static', filename=media.file_path) }}" class="card-img-top" alt="{{ media.file_name }}">
++                            {% endif %}
++                            <div class="card-body p-2">
++                                <p class="card-text small mb-1">
++                                    <strong>{{ media.media_type|capitalize }}</strong>: {{ media.file_name }}
++                                </p>
++                                <div class="btn-group btn-group-sm">
++                                    <a href="{{ url_for('static', filename=media.file_path) }}" class="btn btn-outline-primary" target="_blank">
++                                        <i class="fas fa-eye"></i>
++                                    </a>
++                                    <a href="{{ url_for('static', filename=media.file_path) }}" class="btn btn-outline-success" download>
++                                        <i class="fas fa-download"></i>
++                                    </a>
++                                </div>
++                            </div>
++                        </div>
++                        {% endfor %}
++                    </div>
++                    {% else %}
++                    <p class="text-muted">Медиафайлы отсутствуют</p>
++                    {% endif %}
++                </div>
++            </div>
++        </div>
++    </div>
++
++    <div class="mt-4">
++        <a href="{{ url_for('articles.index') }}" class="btn btn-secondary">
++            <i class="fas fa-arrow-left"></i> К списку артикулов
++        </a>
++        <a href="{{ url_for('articles.edit', id=article.id) }}" class="btn btn-primary">
++            <i class="fas fa-edit"></i> Редактировать
++        </a>
++        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
++            <i class="fas fa-trash"></i> Удалить
++        </button>
++    </div>
++
++    <!-- Модальное окно подтверждения удаления -->
++    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
++        <div class="modal-dialog">
++            <div class="modal-content">
++                <div class="modal-header">
++                    <h5 class="modal-title" id="deleteModalLabel">Подтверждение удаления</h5>
++                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
++                </div>
++                <div class="modal-body">
++                    Вы уверены, что хотите удалить артикул <strong>{{ article.article_code }} - {{ article.name }}</strong>?
++                </div>
++                <div class="modal-footer">
++                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
++                    <form method="POST" action="{{ url_for('articles.delete', id=article.id) }}">
++                        <button type="submit" class="btn btn-danger">Удалить</button>
++                    </form>
++                </div>
++            </div>
++        </div>
++    </div>
++</div>
++{% endblock %}
+\ No newline at end of file
+Index: app/templates/articles/index.html
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/templates/articles/index.html b/app/templates/articles/index.html
+new file mode 100644
+--- /dev/null	(date 1745818397057)
++++ b/app/templates/articles/index.html	(date 1745818397057)
+@@ -0,0 +1,175 @@
++{% extends 'base.html' %}
++
++{% block title %}Список артикулов | ERP VITTAVENTO{% endblock %}
++
++{% block content %}
++<div class="container">
++    <h1 class="my-4">Список артикулов</h1>
++
++    <div class="row mb-4">
++        <div class="col-md-8">
++            <form method="GET" action="{{ url_for('articles.index') }}" class="form-inline">
++                <div class="input-group mb-3">
++                    <input type="text" name="search" class="form-control" placeholder="Поиск по коду или наименованию" value="{{ current_filters.search or '' }}">
++                    <select name="category_id" class="form-select">
++                        <option value="">Все категории</option>
++                        {% for category in categories %}
++                        <option value="{{ category.id }}" {% if current_filters.category_id == category.id %}selected{% endif %}>
++                            {{ category.name }}
++                        </option>
++                        {% endfor %}
++                    </select>
++                    <select name="is_active" class="form-select">
++                        <option value="">Все статусы</option>
++                        <option value="true" {% if current_filters.is_active =='true' %}selected{% endif %}>Активные</option>
++                        <option value="false" {% if current_filters.is_active =='false' %}selected{% endif %}>Неактивные</option>
++                    </select>
++                    <button type="submit" class="btn btn-primary">
++                        <i class="fas fa-search"></i> Поиск
++                    </button>
++                </div>
++            </form>
++        </div>
++        <div class="col-md-4 text-end">
++            <a href="{{ url_for('articles.create') }}" class="btn btn-success">
++                <i class="fas fa-plus"></i> Создать артикул
++            </a>
++        </div>
++    </div>
++
++    <div class="card shadow-sm">
++        <div class="card-body">
++            <div class="table-responsive">
++                <table class="table table-hover">
++                    <thead>
++                        <tr>
++                            <th>Код</th>
++                            <th>Наименование</th>
++                            <th>Категория</th>
++                            <th>Статус</th>
++                            <th>Действия</th>
++                        </tr>
++                    </thead>
++                    <tbody>
++                        {% for article in articles.items %}
++                        <tr>
++                            <td>{{ article.article_code }}</td>
++                            <td>{{ article.name }}</td>
++                            <td>{{ article.category.name }}</td>
++                            <td>
++                                {% if article.is_active %}
++                                <span class="badge bg-success">Активен</span>
++                                {% else %}
++                                <span class="badge bg-secondary">Неактивен</span>
++                                {% endif %}
++                            </td>
++                            <td>
++                                <div class="btn-group" role="group">
++                                    <a href="{{ url_for('articles.view', id=article.id) }}" class="btn btn-sm btn-info">
++                                        <i class="fas fa-eye"></i>
++                                    </a>
++                                    <a href="{{ url_for('articles.edit', id=article.id) }}" class="btn btn-sm btn-primary">
++                                        <i class="fas fa-edit"></i>
++                                    </a>
++                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ article.id }}">
++                                        <i class="fas fa-trash"></i>
++                                    </button>
++                                </div>
++
++                                <!-- Модальное окно подтверждения удаления -->
++                                <div class="modal fade" id="deleteModal{{ article.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ article.id }}" aria-hidden="true">
++                                    <div class="modal-dialog">
++                                        <div class="modal-content">
++                                            <div class="modal-header">
++                                                <h5 class="modal-title" id="deleteModalLabel{{ article.id }}">Подтверждение удаления</h5>
++                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
++                                            </div>
++                                            <div class="modal-body">
++                                                Вы уверены, что хотите удалить артикул <strong>{{ article.article_code }} - {{ article.name }}</strong>?
++                                            </div>
++                                            <div class="modal-footer">
++                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
++                                                <form method="POST" action="{{ url_for('articles.delete', id=article.id) }}">
++                                                    <button type="submit" class="btn btn-danger">Удалить</button>
++                                                </form>
++                                            </div>
++                                        </div>
++                                    </div>
++                                </div>
++                            </td>
++                        </tr>
++                        {% else %}
++                        <tr>
++                            <td colspan="5" class="text-center">Артикулы не найдены</td>
++                        </tr>
++                        {% endfor %}
++                    </tbody>
++                </table>
++            </div>
++
++            <!-- Пагинация -->
++            {% if articles.pages > 1 %}
++            <nav aria-label="Page navigation">
++                <ul class="pagination justify-content-center">
++                    {% if articles.has_prev %}
++                    <li class="page-item">
++                        <a class="page-link" href="{{ url_for('articles.index', page=articles.prev_num, search=current_filters.search, category_id=current_filters.category_id, is_active=current_filters.is_active) }}">
++                            Предыдущая
++                        </a>
++                    </li>
++                    {% else %}
++                    <li class="page-item disabled">
++                        <span class="page-link">Предыдущая</span>
++                    </li>
++                    {% endif %}
++
++                    {% for page_num in articles.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
++                        {% if page_num %}
++                            {% if page_num == articles.page %}
++                            <li class="page-item active">
++                                <span class="page-link">{{ page_num }}</span>
++                            </li>
++                            {% else %}
++                            <li class="page-item">
++                                <a class="page-link" href="{{ url_for('articles.index', page=page_num, search=current_filters.search, category_id=current_filters.category_id, is_active=current_filters.is_active) }}">
++                                    {{ page_num }}
++                                </a>
++                            </li>
++                            {% endif %}
++                        {% else %}
++                        <li class="page-item disabled">
++                            <span class="page-link">...</span>
++                        </li>
++                        {% endif %}
++                    {% endfor %}
++
++                    {% if articles.has_next %}
++                    <li class="page-item">
++                        <a class="page-link" href="{{ url_for('articles.index', page=articles.next_num, search=current_filters.search, category_id=current_filters.category_id, is_active=current_filters.is_active) }}">
++                            Следующая
++                        </a>
++                    </li>
++                    {% else %}
++                    <li class="page-item disabled">
++                        <span class="page-link">Следующая</span>
++                    </li>
++                    {% endif %}
++                </ul>
++            </nav>
++            {% endif %}
++        </div>
++    </div>
++
++    <div class="mt-4">
++        <a href="{{ url_for('main.index') }}" class="btn btn-secondary">
++            <i class="fas fa-arrow-left"></i> Вернуться на главную
++        </a>
++        <a href="{{ url_for('articles.category_index') }}" class="btn btn-info">
++            <i class="fas fa-folder"></i> Управление категориями
++        </a>
++        <a href="{{ url_for('articles.attribute_index') }}" class="btn btn-info">
++            <i class="fas fa-tags"></i> Управление атрибутами
++        </a>
++    </div>
++</div>
++{% endblock %}
+\ No newline at end of file

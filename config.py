@@ -18,7 +18,7 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key-please-change-in-production')
 
     # Настройки базы данных
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'postgresql://localhost/erp_vittavento')
+    SQLALCHEMY_DATABASE_URI = 'postgresql://vittavento_user:vittavento_pass@localhost/erp_vittavento'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Настройки приложения

@@ -6,9 +6,8 @@ from app import create_app, db
 from flask_migrate import Migrate, upgrade
 
 # Создание экземпляра приложения
-app = create_app(os.getenv('FLASK_ENV', 'default'))
+app = create_app(os.getenv('APP_CONFIG', 'default'))
 migrate = Migrate(app, db)
-
 
 # Импорт моделей для использования в shell
 # from app.models import User, Role, Article, ArticleCategory
@@ -26,7 +25,6 @@ def make_shell_context():
         # 'ArticleCategory': ArticleCategory,
     }
 
-
 @app.cli.command()
 def deploy():
     """Выполнение задач развертывания."""
@@ -36,6 +34,7 @@ def deploy():
     # Здесь могут быть дополнительные команды развертывания
     # например, создание ролей, начального пользователя и т.д.
 
-
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5015)
+    # Используем FLASK_DEBUG для управления режимом отладки
+    debug = os.getenv('FLASK_DEBUG', '1') == '1'  # По умолчанию включён режим отладки
+    app.run(host='0.0.0.0', port=5015, debug=debug)
