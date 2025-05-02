@@ -76,6 +76,9 @@ def create_app(config_name=None):
     # Регистрация CLI команд
     register_commands(app)
 
+    # Импорт моделей для Alembic
+    from app.models.users import User, Role
+
     return app
 
 
