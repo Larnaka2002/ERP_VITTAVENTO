@@ -1,25 +1,18 @@
 """
-Точка входа для запуска приложения ERP_VITTAVENTO
+Точка входа для запуска приложения ERP_VITTAVENTO локально
 """
 
-import os
 from app import create_app, db
-from flask_migrate import Migrate, upgrade
+from flask_migrate import upgrade
 
-# Создание экземпляра приложения — доступно для gunicorn
-app = create_app(os.getenv('FLASK_ENV', 'default'))
-migrate = Migrate(app, db)
+app = create_app()
 
-@app.shell_context_processor
-def make_shell_context():
-    """Добавление объектов в контекст flask shell"""
-    return {
-        'db': db,
-        'app': app,
-        # Добавляй модели при необходимости
-    }
-
+# Команда CLI для развёртывания (миграция базы)
 @app.cli.command()
 def deploy():
-    """Выполнение задач развертывания."""
+    """Выполнение задач развёртывания."""
     upgrade()
+
+# Запуск приложения локально
+if __name__ == '__main__':
+    app.run(debug=True, host='127.0.0.1', port=5000)
