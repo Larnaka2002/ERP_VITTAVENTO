@@ -6,7 +6,7 @@ import click
 from flask import current_app
 from flask.cli import with_appcontext
 
-from app import db
+from app.extensions import db
 
 
 # from app.models.users import User, Role, Permission

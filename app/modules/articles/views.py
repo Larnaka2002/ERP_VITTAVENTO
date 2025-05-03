@@ -1,8 +1,8 @@
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app.forms.article_form import ArticleForm
+from app.forms.generator_form import GeneratorForm # Новый импорт формы генератора
 from app.models.article import Article
-from app import db  # не забудь импортировать db
-from flask import redirect, url_for, flash
+from app.extensions import db
 
 articles_bp = Blueprint(
     name='articles',
@@ -25,7 +25,7 @@ def create_article():
         )
         db.session.add(new_article)
         db.session.commit()
-        return redirect(url_for('articles.index'))  # ← редирект на список после сохранения
+        return redirect(url_for('articles.index'))
 
     return render_template('articles/create_article.html', form=form)
 
@@ -48,3 +48,32 @@ def delete_article(article_id):
     db.session.commit()
     flash('Артикул удалён.', 'success')
     return redirect(url_for('articles.index'))
+
+@articles_bp.route('/generator', methods=['GET', 'POST'], endpoint='article_generator')
+def article_generator():
+    form = GeneratorForm()
+    article_code = None
+
+    if request.method == 'POST' and form.validate_on_submit():
+        # Формируем базовый код из введённых данных
+        base_code = (
+            f"{form.prefix.data.upper()}"
+            f"{form.hierarchy_code.data}"
+            f"-{form.material_code.data}"
+            f"{form.color.data}"
+            f"{form.material_type.data}"
+        )
+
+        # Проверка уникальности и добавление суффикса при необходимости
+        article_code = base_code
+        counter = 1
+        while Article.query.filter_by(code=article_code).first():
+            article_code = f"{base_code}-{counter}"
+            counter += 1
+
+        # Сохраняем в базу
+        new_article = Article(code=article_code, description=form.name.data)
+        db.session.add(new_article)
+        db.session.commit()
+
+    return render_template('articles/generator.html', form=form, article_code=article_code)

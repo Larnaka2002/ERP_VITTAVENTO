@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Генератор артикулов | ERP_VITTAVENTO{% endblock %}
+
+{% block header %}
+<h1>Генератор артикулов</h1>
+<p class="text-muted">Создание артикула для продукции с иерархией и дополнительными параметрами</p>
+<hr>
+{% endblock %}
+
+{% block content %}
+<form method="POST" action="">
+  {{ form.hidden_tag() }}
+
+  <div class="mb-3">
+    {{ form.prefix.label(class="form-label") }}
+    {{ form.prefix(class="form-control") }}
+  </div>
+
+  <div class="mb-3">
+    {{ form.hierarchy_code.label(class="form-label") }}
+    {{ form.hierarchy_code(class="form-control") }}
+  </div>
+
+  <div class="mb-3">
+    {{ form.material_code.label(class="form-label") }}
+    {{ form.material_code(class="form-control") }}
+  </div>
+
+  <div class="mb-3">
+    {{ form.name.label(class="form-label") }}
+    {{ form.name(class="form-control") }}
+  </div>
+
+  <div class="mb-3">
+    {{ form.color.label(class="form-label") }}
+    {{ form.color(class="form-control") }}
+  </div>
+
+  <div class="mb-3">
+    {{ form.material_type.label(class="form-label") }}
+    {{ form.material_type(class="form-control") }}
+  </div>
+
+  <div class="mb-3">
+    {{ form.manufacturer.label(class="form-label") }}
+    {{ form.manufacturer(class="form-control") }}
+  </div>
+
+  <div class="mb-3">
+    {{ form.country.label(class="form-label") }}
+    {{ form.country(class="form-control") }}
+  </div>
+
+  <div class="mb-3">
+    {{ form.submit(class="btn btn-primary") }}
+  </div>
+</form>
+
+<a href="{{ url_for('articles.index') }}" class="btn btn-secondary mt-3">Назад к списку артикулов</a>
+
+{% if article_code %}
+<hr>
+<div class="alert alert-success">
+  <strong>Сгенерированный артикул:</strong> {{ article_code }}
+</div>
+{% endif %}
+{% endblock %}

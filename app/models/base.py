@@ -2,7 +2,7 @@
 Базовые модели и миксины для всех моделей приложения
 """
 from datetime import datetime
-from app import db
+from app.extensions import db
 
 
 class TimestampMixin(object):

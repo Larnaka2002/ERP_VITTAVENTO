@@ -2,9 +2,14 @@
 {% block title %}Артикулы{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <h1 class="mb-4">Список артикулов</h1>
-    <a href="{{ url_for('articles.create_article') }}" class="btn btn-primary mb-3">Создать новый артикул</a>
+<div class="d-flex gap-2 mb-3">
+    <a href="{{ url_for('articles.create_article') }}" class="btn btn-primary">
+        Создать новый артикул
+    </a>
+    <a href="{{ url_for('articles.article_generator') }}" class="btn btn-success">
+        Сгенерировать артикул
+    </a>
+</div>
 
     {% if articles %}
         <table class="table table-bordered">

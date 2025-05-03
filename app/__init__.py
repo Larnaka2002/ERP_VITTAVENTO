@@ -5,23 +5,12 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from flask_login import LoginManager
-from flask_jwt_extended import JWTManager
-from flask_wtf.csrf import CSRFProtect
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
-from flask_babel import Babel
 from config import config
 
-# Инициализация расширений
-db = SQLAlchemy()
-migrate = Migrate()
-login_manager = LoginManager()
-jwt = JWTManager()
-csrf = CSRFProtect()
-babel = Babel()  # <= Обязательно инициализируем babel здесь
+# Импорт всех расширений из extensions
+from app.extensions import db, migrate, login_manager, jwt, csrf, babel
 
 # Настройка LoginManager
 login_manager.login_view = 'auth.login'
@@ -66,14 +55,18 @@ def create_app(config_name=None):
 
     # Flask-Admin
     from app.models.users import User, Role
-    from app.models.article import Article  # ← для админки
+    from app.models.article import Article
+    from app.models.article_attributes import ArticleAttribute, ArticleAttributeValue  # ← ДОБАВЛЕНО
+
     admin_panel = Admin(app, name='Админка ERP', template_mode='bootstrap4')
     admin_panel.add_view(ModelView(User, db.session))
     admin_panel.add_view(ModelView(Role, db.session))
-    admin_panel.add_view(ModelView(Article, db.session))  # ← добавили модель
+    admin_panel.add_view(ModelView(Article, db.session))
+    admin_panel.add_view(ModelView(ArticleAttribute, db.session))  # ← ДОБАВЛЕНО
+    admin_panel.add_view(ModelView(ArticleAttributeValue, db.session))  # ← ДОБАВЛЕНО
 
-    # Импорт моделей для миграций и админки
-    from app.models import article  # ← для миграций
+    # Импорт моделей для миграций
+    from app.models import article, article_attributes  # ← ОБНОВЛЕНО
 
     return app
 
@@ -91,9 +84,8 @@ def setup_logging(app):
 def register_blueprints(app):
     from app.routes.main import main_bp
     from app.modules.articles.views import articles_bp
-
     app.register_blueprint(main_bp)
-    app.register_blueprint(articles_bp, url_prefix='/articles')  # ← Регистрируем один раз
+    app.register_blueprint(articles_bp, url_prefix='/articles')
 
 def register_error_handlers(app):
     @app.errorhandler(404)
