@@ -5,21 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b0322003-5220-4f74-b382-b542cedb6956" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/app/forms/article_form.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/modules/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/modules/articles/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/modules/articles/routes.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/modules/articles/templates/articles/create_article.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/modules/articles/templates/articles/index.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/modules/articles/views.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/articles/articles.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/models/article.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/modules/articles/templates/articles/edit_article.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/fix_alembic.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/modules/articles/templates/articles/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/modules/articles/templates/articles/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/modules/articles/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/modules/articles/views.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/logs/erp_vittavento.log" beforeDir="false" afterPath="$PROJECT_DIR$/logs/erp_vittavento.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,8 +25,8 @@
       <list>
         <option value="CSS File" />
         <option value="JavaScript File" />
-        <option value="HTML File" />
         <option value="Python Script" />
+        <option value="HTML File" />
       </list>
     </option>
   </component>
@@ -116,7 +110,7 @@
       <workItem from="1746161909935" duration="15217000" />
       <workItem from="1746213281477" duration="6396000" />
       <workItem from="1746219697006" duration="9637000" />
-      <workItem from="1746243969548" duration="6164000" />
+      <workItem from="1746243969548" duration="13686000" />
     </task>
     <servers />
   </component>

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Редактировать артикул{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">Редактировать артикул</h1>
+
+    <form method="post">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+            {{ form.code.label(class="form-label") }}
+            {{ form.code(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            {{ form.description.label(class="form-label") }}
+            {{ form.description(class="form-control") }}
+        </div>
+        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+        <a href="{{ url_for('articles.index') }}" class="btn btn-secondary">Назад</a>
+    </form>
+</div>
+{% endblock %}

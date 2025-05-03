@@ -66,9 +66,14 @@ def create_app(config_name=None):
 
     # Flask-Admin
     from app.models.users import User, Role
+    from app.models.article import Article  # ← для админки
     admin_panel = Admin(app, name='Админка ERP', template_mode='bootstrap4')
     admin_panel.add_view(ModelView(User, db.session))
     admin_panel.add_view(ModelView(Role, db.session))
+    admin_panel.add_view(ModelView(Article, db.session))  # ← добавили модель
+
+    # Импорт моделей для миграций и админки
+    from app.models import article  # ← для миграций
 
     return app
 
