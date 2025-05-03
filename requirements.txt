@@ -44,3 +44,10 @@ Werkzeug==2.2.3
 wheel==0.45.1
 gunicorn
 flask-wtf
+Flask
+Flask-Login
+Flask-Babel
+Flask-SQLAlchemy
+Flask-Migrate
+requests
+python-dotenv
