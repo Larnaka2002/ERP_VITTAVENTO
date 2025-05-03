@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}Артикулы{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">Список артикулов</h1>
+    <p>Добро пожаловать в модуль управления артикулами. Здесь будут отображаться все зарегистрированные артикулы в системе.</p>
+    <a href="{{ url_for('articles.create_article') }}" class="btn btn-primary mt-3">Создать новый артикул</a>
+</div>
+{% endblock %}

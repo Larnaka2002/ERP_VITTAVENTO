@@ -5,11 +5,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b0322003-5220-4f74-b382-b542cedb6956" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/app/forms/article_form.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/modules/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/modules/articles/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/modules/articles/routes.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/modules/articles/templates/articles/create_article.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/modules/articles/templates/articles/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/modules/articles/views.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/templates/articles/articles.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/logs/erp_vittavento.log" beforeDir="false" afterPath="$PROJECT_DIR$/logs/erp_vittavento.log" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run.py" beforeDir="false" afterPath="$PROJECT_DIR$/run.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -19,9 +29,9 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="HTML File" />
         <option value="CSS File" />
         <option value="JavaScript File" />
+        <option value="HTML File" />
         <option value="Python Script" />
       </list>
     </option>
@@ -78,6 +88,11 @@
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/app/modules/articles" />
+    </key>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -99,7 +114,9 @@
       <workItem from="1746161665290" duration="214000" />
       <workItem from="1746161884720" duration="20000" />
       <workItem from="1746161909935" duration="15217000" />
-      <workItem from="1746213281477" duration="2812000" />
+      <workItem from="1746213281477" duration="6396000" />
+      <workItem from="1746219697006" duration="9637000" />
+      <workItem from="1746243969548" duration="6164000" />
     </task>
     <servers />
   </component>

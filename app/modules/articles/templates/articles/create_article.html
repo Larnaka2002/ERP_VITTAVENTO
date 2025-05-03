@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Создать артикул | ERP_VITTAVENTO{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Создание нового артикула</h2>
+
+    <form method="POST" action="{{ url_for('articles.create_article') }}">
+        {{ form.hidden_tag() }}
+
+        <div class="mb-3">
+            {{ form.code.label(class="form-label") }}
+            {{ form.code(class="form-control", placeholder="Например: ABC123456-7890") }}
+            {% if form.code.errors %}
+                <div class="text-danger small">{{ form.code.errors[0] }}</div>
+            {% endif %}
+        </div>
+
+        <div class="mb-3">
+            {{ form.description.label(class="form-label") }}
+            {{ form.description(class="form-control", placeholder="Краткое описание артикула") }}
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <a href="{{ url_for('articles.index') }}" class="btn btn-secondary">Назад</a>
+            <button type="submit" class="btn btn-primary">Создать</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

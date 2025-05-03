@@ -10,11 +10,9 @@ from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_jwt_extended import JWTManager
 from flask_wtf.csrf import CSRFProtect
-
-# Импорт Flask-Admin
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
-
+from flask_babel import Babel
 from config import config
 
 # Инициализация расширений
@@ -23,6 +21,7 @@ migrate = Migrate()
 login_manager = LoginManager()
 jwt = JWTManager()
 csrf = CSRFProtect()
+babel = Babel()  # <= Обязательно инициализируем babel здесь
 
 # Настройка LoginManager
 login_manager.login_view = 'auth.login'
@@ -45,6 +44,10 @@ def create_app(config_name=None):
     app.config.from_object(config[config_name])
     config[config_name].init_app(app)
 
+    # Настройка языка
+    app.config['BABEL_DEFAULT_LOCALE'] = 'en'
+    babel.init_app(app)
+
     # Инициализация расширений
     db.init_app(app)
     migrate.init_app(app, db)
@@ -52,7 +55,7 @@ def create_app(config_name=None):
     jwt.init_app(app)
     csrf.init_app(app)
 
-    # Настройка логирования
+    # Логирование
     setup_logging(app)
 
     # Регистрация компонентов
@@ -82,7 +85,10 @@ def setup_logging(app):
 
 def register_blueprints(app):
     from app.routes.main import main_bp
+    from app.modules.articles.views import articles_bp
+
     app.register_blueprint(main_bp)
+    app.register_blueprint(articles_bp, url_prefix='/articles')  # ← Регистрируем один раз
 
 def register_error_handlers(app):
     @app.errorhandler(404)

@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Артикулы | ERP_VITTAVENTO{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Список артикулов</h1>
+        <a href="#" class="btn btn-success">+ Создать артикул</a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover table-bordered align-middle">
+            <thead class="table-dark text-center">
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Артикул</th>
+                    <th scope="col">Описание</th>
+                    <th scope="col">Дата создания</th>
+                    <th scope="col">Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for article in articles %}
+                <tr>
+                    <td class="text-center">{{ loop.index }}</td>
+                    <td>{{ article.code }}</td>
+                    <td>{{ article.description or '-' }}</td>
+                    <td class="text-center">{{ article.created_at.strftime('%Y-%m-%d') }}</td>
+                    <td class="text-center">
+                        <a href="#" class="btn btn-sm btn-outline-warning">Редактировать</a>
+                        <a href="#" class="btn btn-sm btn-outline-danger">Удалить</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted">Артикулы не найдены.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
