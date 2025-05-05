@@ -84,8 +84,18 @@ def setup_logging(app):
 def register_blueprints(app):
     from app.routes.main import main_bp
     from app.modules.articles.views import articles_bp
+    from app.modules.warehouse.views import warehouse_bp
+    from app.modules.production.views import production_bp
+    from app.modules.sales.views import sales_bp
+    from app.modules.reports.views import reports_bp
+    from app.modules.adminpanel.views import adminpanel_bp
     app.register_blueprint(main_bp)
     app.register_blueprint(articles_bp, url_prefix='/articles')
+    app.register_blueprint(warehouse_bp, url_prefix='/warehouse')
+    app.register_blueprint(production_bp, url_prefix='/production')
+    app.register_blueprint(sales_bp, url_prefix='/sales')
+    app.register_blueprint(reports_bp, url_prefix='/reports')
+    app.register_blueprint(adminpanel_bp, url_prefix='/adminpanel')
 
 def register_error_handlers(app):
     @app.errorhandler(404)

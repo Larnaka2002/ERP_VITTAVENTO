@@ -1,0 +1,927 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Производство | ERP VITTAVENTO</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .status-planned { background-color: #f6c23e; }
+        .status-in-progress { background-color: #4e73df; }
+        .status-completed { background-color: #1cc88a; }
+        .status-canceled { background-color: #e74a3b; }
+
+        .operation-step {
+            border-left: 3px solid #4e73df;
+            padding-left: 15px;
+            margin-bottom: 15px;
+        }
+        .operation-step.completed { border-left-color: #1cc88a; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="/">ERP VITTAVENTO</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Главная</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/articles">Артикулы</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/warehouse">Склад</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/production">Производство</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/sales">Продажи</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<main class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Управление производством</h1>
+        <div>
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#newProductionOrderModal">
+                <i class="fas fa-plus me-1"></i> Создать заказ
+            </button>
+        </div>
+    </div>
+
+    <!-- Простая навигация по вкладкам -->
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+            <a class="nav-link active" id="orders-tab" data-bs-toggle="tab" href="#orders">Заказы</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="bom-tab" data-bs-toggle="tab" href="#bom">Спецификации</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="planning-tab" data-bs-toggle="tab" href="#planning">Планирование</a>
+        </li>
+    </ul>
+
+    <!-- Содержимое вкладок -->
+    <div class="tab-content">
+        <!-- Вкладка Производственные заказы -->
+        <div class="tab-pane fade show active" id="orders">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" placeholder="Поиск по номеру или артикулу...">
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select">
+                                <option selected>Все статусы</option>
+                                <option>Запланирован</option>
+                                <option>В производстве</option>
+                                <option>Завершен</option>
+                                <option>Отменен</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select">
+                                <option selected>По дате ↓</option>
+                                <option>По дате ↑</option>
+                                <option>По номеру</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>№ заказа</th>
+                                    <th>Артикул</th>
+                                    <th>Наименование</th>
+                                    <th>Количество</th>
+                                    <th>Планируемая дата</th>
+                                    <th>Прогресс</th>
+                                    <th>Статус</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>ПЗ-2025-0001</td>
+                                    <td>DR0010001</td>
+                                    <td>Дверь межкомнатная "Классик"</td>
+                                    <td>10 шт.</td>
+                                    <td>05.05.2025</td>
+                                    <td>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: 100%"></div>
+                                        </div>
+                                    </td>
+                                    <td><span class="status-indicator status-completed"></span> Завершен</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewOrderModal">Детали</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>ПЗ-2025-0002</td>
+                                    <td>DR0010002</td>
+                                    <td>Дверь межкомнатная "Модерн"</td>
+                                    <td>5 шт.</td>
+                                    <td>07.05.2025</td>
+                                    <td>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-primary" role="progressbar" style="width: 60%"></div>
+                                        </div>
+                                    </td>
+                                    <td><span class="status-indicator status-in-progress"></span> В производстве</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary">Детали</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>ПЗ-2025-0003</td>
+                                    <td>FR0020001</td>
+                                    <td>Фреза КМЕ 45°</td>
+                                    <td>20 шт.</td>
+                                    <td>10.05.2025</td>
+                                    <td>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-warning" role="progressbar" style="width: 0%"></div>
+                                        </div>
+                                    </td>
+                                    <td><span class="status-indicator status-planned"></span> Запланирован</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-primary">Детали</button>
+                                            <button type="button" class="btn btn-outline-success">Запустить</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>ПЗ-2025-0004</td>
+                                    <td>TP0040012</td>
+                                    <td>Шаблон дверной "Стандарт"</td>
+                                    <td>15 шт.</td>
+                                    <td>08.05.2025</td>
+                                    <td>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar bg-danger" role="progressbar" style="width: 10%"></div>
+                                        </div>
+                                    </td>
+                                    <td><span class="status-indicator status-canceled"></span> Отменен</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary">Детали</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <nav aria-label="Навигация по страницам">
+                        <ul class="pagination justify-content-end mb-0">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1">Предыдущая</a>
+                            </li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">Следующая</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- Вкладка Спецификации (BOM) -->
+        <div class="tab-pane fade" id="bom">
+            <div class="card">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Спецификации (BOM)</h5>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newBomModal">
+                        <i class="fas fa-plus me-1"></i> Создать спецификацию
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Артикул</th>
+                                    <th>Наименование</th>
+                                    <th>Версия</th>
+                                    <th>Кол-во компонентов</th>
+                                    <th>Статус</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>DR0010001</td>
+                                    <td>Дверь межкомнатная "Классик"</td>
+                                    <td>1.2</td>
+                                    <td>12</td>
+                                    <td><span class="badge bg-success">Активна</span></td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#viewBomModal">Детали</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>DR0010002</td>
+                                    <td>Дверь межкомнатная "Модерн"</td>
+                                    <td>1.0</td>
+                                    <td>15</td>
+                                    <td><span class="badge bg-success">Активна</span></td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary">Детали</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>FR0020001</td>
+                                    <td>Фреза КМЕ 45°</td>
+                                    <td>2.1</td>
+                                    <td>8</td>
+                                    <td><span class="badge bg-success">Активна</span></td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary">Детали</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Вкладка Планирование -->
+        <div class="tab-pane fade" id="planning">
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">График производства</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <div class="fw-bold">ПЗ-2025-0001 - Дверь межкомнатная "Классик" (10 шт.)</div>
+                                    <div class="small text-muted">01.05.2025 - 05.05.2025</div>
+                                </div>
+                                <div class="progress mb-3" style="height: 25px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: 100%">Завершен</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <div class="fw-bold">ПЗ-2025-0002 - Дверь межкомнатная "Модерн" (5 шт.)</div>
+                                    <div class="small text-muted">03.05.2025 - 07.05.2025</div>
+                                </div>
+                                <div class="progress mb-3" style="height: 25px;">
+                                    <div class="progress-bar bg-primary" role="progressbar" style="width: 60%">В производстве</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <div class="fw-bold">ПЗ-2025-0003 - Фреза КМЕ 45° (20 шт.)</div>
+                                    <div class="small text-muted">08.05.2025 - 10.05.2025</div>
+                                </div>
+                                <div class="progress mb-3" style="height: 25px;">
+                                    <div class="progress-bar bg-warning" role="progressbar" style="width: 100%">Запланирован</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">Загрузка оборудования</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <div>Станок ЧПУ #1</div>
+                                    <div>95%</div>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-danger" role="progressbar" style="width: 95%"></div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <div>Станок ЧПУ #2</div>
+                                    <div>80%</div>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-warning" role="progressbar" style="width: 80%"></div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <div>Покрасочная камера</div>
+                                    <div>65%</div>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: 65%"></div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between mb-1">
+                                    <div>Сборочный участок</div>
+                                    <div>75%</div>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: 75%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">Потребность в материалах</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Артикул</th>
+                                            <th>Наименование</th>
+                                            <th>Требуется</th>
+                                            <th>В наличии</th>
+                                            <th>Статус</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>MT001</td>
+                                            <td>МДФ панель</td>
+                                            <td>15 шт.</td>
+                                            <td>20 шт.</td>
+                                            <td><span class="badge bg-success">Достаточно</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>MT002</td>
+                                            <td>Брус сосновый</td>
+                                            <td>50 м.</td>
+                                            <td>65 м.</td>
+                                            <td><span class="badge bg-success">Достаточно</span></td>
+                                        </tr>
+                                        <tr class="table-warning">
+                                            <td>MT003</td>
+                                            <td>Петли дверные</td>
+                                            <td>30 шт.</td>
+                                            <td>25 шт.</td>
+                                            <td><span class="badge bg-warning text-dark">Нехватка</span></td>
+                                        </tr>
+                                        <tr class="table-danger">
+                                            <td>MT004</td>
+                                            <td>Замок магнитный</td>
+                                            <td>15 шт.</td>
+                                            <td>0 шт.</td>
+                                            <td><span class="badge bg-danger">Отсутствует</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <button class="btn btn-outline-primary mt-3">
+                                <i class="fas fa-file-export me-1"></i> Сформировать заявку
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Модальное окно просмотра производственного заказа -->
+<div class="modal fade" id="viewOrderModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Производственный заказ № ПЗ-2025-0001</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <h6>Информация о заказе</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th class="w-25">Артикул:</th>
+                                <td>DR0010001 - Дверь межкомнатная "Классик"</td>
+                            </tr>
+                            <tr>
+                                <th>Количество:</th>
+                                <td>10 шт.</td>
+                            </tr>
+                            <tr>
+                                <th>Дата начала:</th>
+                                <td>01.05.2025</td>
+                            </tr>
+                            <tr>
+                                <th>Дата завершения:</th>
+                                <td>05.05.2025</td>
+                            </tr>
+                            <tr>
+                                <th>Ответственный:</th>
+                                <td>Петров П.П.</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>Статус заказа</h6>
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <div class="d-inline-block p-3 rounded-circle bg-success text-white mb-3">
+                                    <i class="fas fa-check fa-2x"></i>
+                                </div>
+                                <h5>Завершен</h5>
+                                <p class="text-muted mb-0">05.05.2025</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h6>Выполнение операций</h6>
+                <div class="operation-step completed">
+                    <div class="d-flex justify-content-between">
+                        <div class="fw-bold">1. Подготовка материалов</div>
+                        <div class="text-success">Выполнено</div>
+                    </div>
+                    <div class="text-muted small mb-1">Выполнил: Иванов И.И., 01.05.2025</div>
+                </div>
+
+                <div class="operation-step completed">
+                    <div class="d-flex justify-content-between">
+                        <div class="fw-bold">2. Раскрой заготовок</div>
+                        <div class="text-success">Выполнено</div>
+                    </div>
+                    <div class="text-muted small mb-1">Выполнил: Сидоров С.С., 02.05.2025</div>
+                </div>
+
+                <div class="operation-step completed">
+                    <div class="d-flex justify-content-between">
+                        <div class="fw-bold">3. Обработка на станке ЧПУ</div>
+                        <div class="text-success">Выполнено</div>
+                    </div>
+                    <div class="text-muted small mb-1">Выполнил: Петров П.П., 03.05.2025</div>
+                </div>
+
+                <div class="operation-step completed">
+                    <div class="d-flex justify-content-between">
+                        <div class="fw-bold">4. Шлифовка</div>
+                        <div class="text-success">Выполнено</div>
+                    </div>
+                    <div class="text-muted small mb-1">Выполнил: Иванов И.И., 03.05.2025</div>
+                </div>
+
+                <div class="operation-step completed">
+                    <div class="d-flex justify-content-between">
+                        <div class="fw-bold">5. Покраска</div>
+                        <div class="text-success">Выполнено</div>
+                    </div>
+                    <div class="text-muted small mb-1">Выполнил: Николаев Н.Н., 04.05.2025</div>
+                </div>
+
+                <div class="operation-step completed">
+                    <div class="d-flex justify-content-between">
+                        <div class="fw-bold">6. Сборка и контроль качества</div>
+                        <div class="text-success">Выполнено</div>
+                    </div>
+                    <div class="text-muted small mb-1">Выполнил: Петров П.П., 05.05.2025</div>
+                </div>
+
+                <h6 class="mt-3">Использованные материалы</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Артикул</th>
+                                <th>Наименование</th>
+                                <th>Количество</th>
+                                <th>Ед. изм.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>MT001</td>
+                                <td>МДФ панель 2440x1220x18</td>
+                                <td>5</td>
+                                <td>шт.</td>
+                            </tr>
+                            <tr>
+                                <td>MT002</td>
+                                <td>Брус сосновый 50x50</td>
+                                <td>20</td>
+                                <td>м.</td>
+                            </tr>
+                            <tr>
+                                <td>MT003</td>
+                                <td>Петли дверные</td>
+                                <td>20</td>
+                                <td>шт.</td>
+                            </tr>
+                            <tr>
+                                <td>MT004</td>
+                                <td>Замок магнитный</td>
+                                <td>10</td>
+                                <td>шт.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                <button type="button" class="btn btn-primary">
+                    <i class="fas fa-print me-1"></i> Печать
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно просмотра спецификации (BOM) -->
+<div class="modal fade" id="viewBomModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Спецификация: Дверь межкомнатная "Классик"</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>Основная информация</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th class="w-25">Артикул:</th>
+                                <td>DR0010001</td>
+                            </tr>
+                            <tr>
+                                <th>Наименование:</th>
+                                <td>Дверь межкомнатная "Классик"</td>
+                            </tr>
+                            <tr>
+                                <th>Версия:</th>
+                                <td>1.2</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Технические характеристики</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <th class="w-25">Размеры:</th>
+                                <td>2000 x 800 x 40 мм</td>
+                            </tr>
+                            <tr>
+                                <th>Материал:</th>
+                                <td>МДФ, массив сосны</td>
+                            </tr>
+                            <tr>
+                                <th>Цвет:</th>
+                                <td>Венге</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <h6>Состав спецификации</h6>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>№</th>
+                                <th>Артикул</th>
+                                <th>Наименование</th>
+                                <th>Количество</th>
+                                <th>Ед. изм.</th>
+                                <th>Примечание</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>MT001</td>
+                                <td>МДФ панель 2440x1220x18</td>
+                                <td>0.5</td>
+                                <td>шт.</td>
+                                <td>Для полотна</td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>MT002</td>
+                                <td>Брус сосновый 50x50</td>
+                                <td>2</td>
+                                <td>м.</td>
+                                <td>Для каркаса</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>MT003</td>
+                                <td>Петли дверные</td>
+                                <td>2</td>
+                                <td>шт.</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>MT004</td>
+                                <td>Замок магнитный</td>
+                                <td>1</td>
+                                <td>шт.</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>5</td>
+                                <td>MT005</td>
+                                <td>Краска венге</td>
+                                <td>0.25</td>
+                                <td>л.</td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                <button type="button" class="btn btn-primary">
+                    <i class="fas fa-print me-1"></i> Печать
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно создания производственного заказа -->
+<div class="modal fade" id="newProductionOrderModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Создание производственного заказа</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="productionArticle" class="form-label">Артикул</label>
+                        <select class="form-select" id="productionArticle" required>
+                            <option value="">Выберите артикул</option>
+                            <option value="DR0010001">DR0010001 - Дверь межкомнатная "Классик"</option>
+                            <option value="DR0010002">DR0010002 - Дверь межкомнатная "Модерн"</option>
+                            <option value="FR0020001">FR0020001 - Фреза КМЕ 45°</option>
+                            <option value="TP0040012">TP0040012 - Шаблон дверной "Стандарт"</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="productionQuantity" class="form-label">Количество</label>
+                        <input type="number" class="form-control" id="productionQuantity" min="1" value="1" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="productionBom" class="form-label">Спецификация (BOM)</label>
+                        <select class="form-select" id="productionBom" required>
+                            <option value="">Выберите спецификацию</option>
+                            <option value="1">Дверь межкомнатная "Классик" v1.2</option>
+                            <option value="2">Дверь межкомнатная "Модерн" v1.0</option>
+                            <option value="3">Фреза КМЕ 45° v2.1</option>
+                            <option value="4">Шаблон дверной "Стандарт" v1.5</option>
+                        </select>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="productionStartDate" class="form-label">Дата начала</label>
+                            <input type="date" class="form-control" id="productionStartDate" required value="2025-05-10">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="productionEndDate" class="form-label">Дата завершения</label>
+                            <input type="date" class="form-control" id="productionEndDate" required value="2025-05-15">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="productionResponsible" class="form-label">Ответственный</label>
+                        <select class="form-select" id="productionResponsible" required>
+                            <option value="">Выберите ответственного</option>
+                            <option value="1">Иванов И.И.</option>
+                            <option value="2">Петров П.П.</option>
+                            <option value="3">Сидоров С.С.</option>
+                            <option value="4">Николаев Н.Н.</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="productionPriority" class="form-label">Приоритет</label>
+                        <select class="form-select" id="productionPriority">
+                            <option value="normal" selected>Обычный</option>
+                            <option value="high">Высокий</option>
+                            <option value="urgent">Срочный</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-success">Создать</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно создания спецификации (BOM) -->
+<div class="modal fade" id="newBomModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Создание спецификации (BOM)</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="row mb-3">
+                        <div class="col-md-8">
+                            <label for="bomArticle" class="form-label">Артикул</label>
+                            <select class="form-select" id="bomArticle" required>
+                                <option value="">Выберите артикул</option>
+                                <option value="DR0010001">DR0010001 - Дверь межкомнатная "Классик"</option>
+                                <option value="DR0010002">DR0010002 - Дверь межкомнатная "Модерн"</option>
+                                <option value="FR0020001">FR0020001 - Фреза КМЕ 45°</option>
+                                <option value="TP0040012">TP0040012 - Шаблон дверной "Стандарт"</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="bomVersion" class="form-label">Версия</label>
+                            <input type="text" class="form-control" id="bomVersion" value="1.0" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Компоненты</label>
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="bomItems">
+                                <thead>
+                                    <tr>
+                                        <th width="5%">№</th>
+                                        <th width="25%">Артикул</th>
+                                        <th width="30%">Наименование</th>
+                                        <th width="10%">Кол-во</th>
+                                        <th width="10%">Ед. изм.</th>
+                                        <th width="15%">Примечание</th>
+                                        <th width="5%"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td>
+                                            <select class="form-select form-select-sm">
+                                                <option value="">Выберите артикул</option>
+                                                <option value="MT001">MT001 - МДФ панель</option>
+                                                <option value="MT002">MT002 - Брус сосновый</option>
+                                                <option value="MT003">MT003 - Петли дверные</option>
+                                                <option value="MT004">MT004 - Замок магнитный</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control form-control-sm" readonly>
+                                        </td>
+                                        <td>
+                                            <input type="number" class="form-control form-control-sm" min="0.01" step="0.01" value="1">
+                                        </td>
+                                        <td>
+                                            <select class="form-select form-select-sm">
+                                                <option value="шт.">шт.</option>
+                                                <option value="м.">м.</option>
+                                                <option value="кг.">кг.</option>
+                                                <option value="л.">л.</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="text" class="form-control form-control-sm">
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-danger btn-sm">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="7">
+                                            <button type="button" class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-plus me-1"></i> Добавить компонент
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-success">Создать</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Простой JavaScript для интерактивности -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Автозаполнение наименования при выборе артикула в форме создания заказа
+        const articleSelect = document.getElementById('productionArticle');
+        if (articleSelect) {
+            articleSelect.addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                // Здесь можно добавить логику автоматического выбора спецификации
+            });
+        }
+
+        // Обработчик добавления компонента в спецификацию
+        const addComponentButton = document.querySelector('#bomItems tfoot button');
+        if (addComponentButton) {
+            addComponentButton.addEventListener('click', function() {
+                const tbody = document.querySelector('#bomItems tbody');
+                const rowCount = tbody.querySelectorAll('tr').length;
+                const newRow = tbody.querySelector('tr').cloneNode(true);
+
+                // Обновляем номер строки
+                newRow.querySelector('td:first-child').textContent = rowCount + 1;
+
+                // Очищаем значения в новой строке
+                const inputs = newRow.querySelectorAll('input');
+                inputs.forEach(input => {
+                    if (input.type === 'number') {
+                        input.value = input.min || '1';
+                    } else {
+                        input.value = '';
+                    }
+                });
+
+                const selects = newRow.querySelectorAll('select');
+                selects.forEach(select => {
+                    select.selectedIndex = 0;
+                });
+
+                tbody.appendChild(newRow);
+            });
+        }
+    });
+</script>
+</body>
+</html>
+</antArtifact>

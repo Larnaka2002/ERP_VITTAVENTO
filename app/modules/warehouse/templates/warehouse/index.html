@@ -1,0 +1,557 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Склад | ERP VITTAVENTO</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="/">ERP VITTAVENTO</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Главная</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/articles">Артикулы</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/warehouse">Склад</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/production">Производство</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/sales">Продажи</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<main class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Управление складом</h1>
+        <div>
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#newOperationModal">
+                <i class="fas fa-plus me-1"></i> Создать операцию
+            </button>
+        </div>
+    </div>
+
+    <!-- Простая навигация по вкладкам -->
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item">
+            <a class="nav-link active" id="stock-tab" data-bs-toggle="tab" href="#stock">Остатки</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="operations-tab" data-bs-toggle="tab" href="#operations">Операции</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="inventory-tab" data-bs-toggle="tab" href="#inventory">Инвентаризация</a>
+        </li>
+    </ul>
+
+    <!-- Содержимое вкладок -->
+    <div class="tab-content">
+        <!-- Вкладка Остатки -->
+        <div class="tab-pane fade show active" id="stock">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" placeholder="Поиск по наименованию или коду...">
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select">
+                                <option selected>Все склады</option>
+                                <option>Основной склад</option>
+                                <option>Склад сырья</option>
+                                <option>Склад готовой продукции</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" id="showZeroStock">
+                                <label class="form-check-label" for="showZeroStock">С нулевым остатком</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Код артикула</th>
+                                    <th>Наименование</th>
+                                    <th>Склад</th>
+                                    <th class="text-end">Количество</th>
+                                    <th class="text-end">Зарезервировано</th>
+                                    <th class="text-end">Доступно</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>DR0010001</td>
+                                    <td>Дверь межкомнатная "Классик"</td>
+                                    <td>Склад готовой продукции</td>
+                                    <td class="text-end">25</td>
+                                    <td class="text-end">5</td>
+                                    <td class="text-end">20</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary">Детали</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>DR0010002</td>
+                                    <td>Дверь межкомнатная "Модерн"</td>
+                                    <td>Склад готовой продукции</td>
+                                    <td class="text-end">15</td>
+                                    <td class="text-end">10</td>
+                                    <td class="text-end">5</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary">Детали</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>FR0020001</td>
+                                    <td>Фреза КМЕ 45°</td>
+                                    <td>Склад сырья</td>
+                                    <td class="text-end">3</td>
+                                    <td class="text-end">2</td>
+                                    <td class="text-end">1</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary">Детали</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>CP0030005</td>
+                                    <td>Петли дверные универсальные</td>
+                                    <td>Склад сырья</td>
+                                    <td class="text-end">150</td>
+                                    <td class="text-end">30</td>
+                                    <td class="text-end">120</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary">Детали</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <nav aria-label="Навигация по страницам">
+                        <ul class="pagination justify-content-end mb-0">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1">Предыдущая</a>
+                            </li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">Следующая</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- Вкладка Операции -->
+        <div class="tab-pane fade" id="operations">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <select class="form-select">
+                                <option selected>Все типы операций</option>
+                                <option>Приход</option>
+                                <option>Расход</option>
+                                <option>Перемещение</option>
+                                <option>Списание</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select">
+                                <option selected>Все статусы</option>
+                                <option>Черновик</option>
+                                <option>Подтвержден</option>
+                                <option>Завершен</option>
+                                <option>Отменен</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <input type="date" class="form-control">
+                                <span class="input-group-text">-</span>
+                                <input type="date" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>№ документа</th>
+                                    <th>Тип операции</th>
+                                    <th>Дата</th>
+                                    <th>Склад</th>
+                                    <th>Статус</th>
+                                    <th>Сумма</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>ПР-2025-0001</td>
+                                    <td>Приход</td>
+                                    <td>01.05.2025</td>
+                                    <td>Склад сырья</td>
+                                    <td><span class="badge bg-success">Подтвержден</span></td>
+                                    <td>150,000.00 ₽</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary">Просмотр</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>РС-2025-0005</td>
+                                    <td>Расход</td>
+                                    <td>02.05.2025</td>
+                                    <td>Склад готовой продукции</td>
+                                    <td><span class="badge bg-primary">В обработке</span></td>
+                                    <td>75,000.00 ₽</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary">Просмотр</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>ПМ-2025-0003</td>
+                                    <td>Перемещение</td>
+                                    <td>02.05.2025</td>
+                                    <td>Основной склад → Склад готовой продукции</td>
+                                    <td><span class="badge bg-success">Подтвержден</span></td>
+                                    <td>62,500.00 ₽</td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary">Просмотр</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>СП-2025-0002</td>
+                                    <td>Списание</td>
+                                    <td>03.05.2025</td>
+                                    <td>Склад сырья</td>
+                                    <td><span class="badge bg-warning text-dark">Черновик</span></td>
+                                    <td>5,200.00 ₽</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-primary">Просмотр</button>
+                                            <button type="button" class="btn btn-outline-success">Подтвердить</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Вкладка Инвентаризация -->
+        <div class="tab-pane fade" id="inventory">
+            <div class="card">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Инвентаризации</h5>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newInventoryModal">
+                        <i class="fas fa-plus me-1"></i> Создать инвентаризацию
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>№ документа</th>
+                                    <th>Склад</th>
+                                    <th>Дата начала</th>
+                                    <th>Дата окончания</th>
+                                    <th>Статус</th>
+                                    <th>Расхождения</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>ИНВ-2025-0001</td>
+                                    <td>Склад сырья</td>
+                                    <td>15.04.2025</td>
+                                    <td>16.04.2025</td>
+                                    <td><span class="badge bg-success">Завершена</span></td>
+                                    <td><span class="badge bg-danger">Да</span></td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary">Просмотр</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>ИНВ-2025-0002</td>
+                                    <td>Склад готовой продукции</td>
+                                    <td>20.04.2025</td>
+                                    <td>21.04.2025</td>
+                                    <td><span class="badge bg-success">Завершена</span></td>
+                                    <td><span class="badge bg-success">Нет</span></td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-outline-primary">Просмотр</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>ИНВ-2025-0003</td>
+                                    <td>Основной склад</td>
+                                    <td>03.05.2025</td>
+                                    <td>-</td>
+                                    <td><span class="badge bg-primary">В процессе</span></td>
+                                    <td><span class="badge bg-secondary">-</span></td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-primary">Просмотр</button>
+                                            <button type="button" class="btn btn-outline-success">Завершить</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Модальное окно создания складской операции -->
+<div class="modal fade" id="newOperationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Создание складской операции</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="operationType" class="form-label">Тип операции</label>
+                            <select class="form-select" id="operationType" required>
+                                <option value="">Выберите тип операции</option>
+                                <option value="in">Приход</option>
+                                <option value="out">Расход</option>
+                                <option value="move">Перемещение</option>
+                                <option value="write-off">Списание</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="operationDate" class="form-label">Дата операции</label>
+                            <input type="date" class="form-control" id="operationDate" required value="2025-05-03">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="sourceWarehouse" class="form-label">Склад</label>
+                            <select class="form-select" id="sourceWarehouse" required>
+                                <option value="">Выберите склад</option>
+                                <option value="1">Основной склад</option>
+                                <option value="2">Склад сырья</option>
+                                <option value="3">Склад готовой продукции</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6" id="targetWarehouseBlock" style="display: none;">
+                            <label for="targetWarehouse" class="form-label">Склад назначения</label>
+                            <select class="form-select" id="targetWarehouse">
+                                <option value="">Выберите склад</option>
+                                <option value="1">Основной склад</option>
+                                <option value="2">Склад сырья</option>
+                                <option value="3">Склад готовой продукции</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Товары</label>
+                        <div class="table-responsive">
+                            <table class="table table-bordered" id="operationItems">
+                                <thead>
+                                    <tr>
+                                        <th>Артикул</th>
+                                        <th>Количество</th>
+                                        <th>Цена</th>
+                                        <th>Сумма</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <select class="form-select">
+                                                <option value="">Выберите артикул</option>
+                                                <option value="DR0010001">DR0010001 - Дверь межкомнатная "Классик"</option>
+                                                <option value="DR0010002">DR0010002 - Дверь межкомнатная "Модерн"</option>
+                                                <option value="FR0020001">FR0020001 - Фреза КМЕ 45°</option>
+                                                <option value="CP0030005">CP0030005 - Петли дверные универсальные</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="number" class="form-control" min="1" value="1">
+                                        </td>
+                                        <td>
+                                            <input type="number" class="form-control" step="0.01" value="0.00">
+                                        </td>
+                                        <td>
+                                            <input type="number" class="form-control" readonly value="0.00">
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-danger btn-sm">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="5">
+                                            <button type="button" class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-plus me-1"></i> Добавить товар
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="operationNotes" class="form-label">Примечание</label>
+                        <textarea class="form-control" id="operationNotes" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-success">Сохранить</button>
+                <button type="button" class="btn btn-primary">Создать и подтвердить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно создания инвентаризации -->
+<div class="modal fade" id="newInventoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Создание инвентаризации</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="inventoryWarehouse" class="form-label">Склад</label>
+                        <select class="form-select" id="inventoryWarehouse" required>
+                            <option value="">Выберите склад</option>
+                            <option value="1">Основной склад</option>
+                            <option value="2">Склад сырья</option>
+                            <option value="3">Склад готовой продукции</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="inventoryDate" class="form-label">Дата начала</label>
+                        <input type="date" class="form-control" id="inventoryDate" required value="2025-05-03">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Режим инвентаризации</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="inventoryMode" id="inventoryModeFull" checked>
+                            <label class="form-check-label" for="inventoryModeFull">
+                                Полная инвентаризация
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="inventoryMode" id="inventoryModePartial">
+                            <label class="form-check-label" for="inventoryModePartial">
+                                Выборочная инвентаризация
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary">Создать</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Простой JavaScript для интерактивности -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Показать/скрыть блок склада назначения при выборе типа операции
+        const operationType = document.getElementById('operationType');
+        const targetWarehouseBlock = document.getElementById('targetWarehouseBlock');
+
+        if (operationType && targetWarehouseBlock) {
+            operationType.addEventListener('change', function() {
+                if (this.value === 'move') {
+                    targetWarehouseBlock.style.display = 'block';
+                } else {
+                    targetWarehouseBlock.style.display = 'none';
+                }
+            });
+        }
+
+        // Расчет суммы строки при изменении количества или цены
+        const operationItems = document.getElementById('operationItems');
+        if (operationItems) {
+            operationItems.addEventListener('input', function(e) {
+                if (e.target.tagName === 'INPUT' && e.target.type === 'number') {
+                    const row = e.target.closest('tr');
+                    if (row) {
+                        const qtyInput = row.querySelector('input[type="number"]:nth-of-type(1)');
+                        const priceInput = row.querySelector('input[type="number"]:nth-of-type(2)');
+                        const sumInput = row.querySelector('input[type="number"]:nth-of-type(3)');
+
+                        if (qtyInput && priceInput && sumInput) {
+                            const qty = parseFloat(qtyInput.value) || 0;
+                            const price = parseFloat(priceInput.value) || 0;
+                            sumInput.value = (qty * price).toFixed(2);
+                        }
+                    }
+                }
+            });
+        }
+    });
+</script>
+</body>
+</html>
+</antArtifact>
+
+
+
+

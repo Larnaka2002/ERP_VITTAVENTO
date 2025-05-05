@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Модуль администрирования | ERP VITTAVENTO</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Кастомные стили -->
+    <style>
+        body {
+            font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main {
+            flex: 1;
+        }
+
+        .card {
+            border-radius: 0.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 1.5rem;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .admin-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #3498db;
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: #3498db;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            border-color: #3498db;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+
+        .table th {
+            background-color: #f8f9fa;
+        }
+
+        .admin-card {
+            cursor: pointer;
+            height: 100%;
+        }
+
+        .status-active {
+            color: #2ecc71;
+        }
+
+        .status-inactive {
+            color: #e74c3c;
+        }
+
+        .status-pending {
+            color: #f39c12;
+        }
+
+        .log-entry {
+            border-left: 3px solid #e0e0e0;
+            padding-left: 15px;
+            margin-bottom: 10px;
+        }
+
+        .log-info {
+            border-left-color: #3498db;
+        }
+
+        .log-warning {
+            border-left-color: #f39c12;
+        }
+
+        .log-error {
+            border-left-color: #e74c3c;
+        }
+
+        .log-success {
+            border-left-color: #2ecc71;
+        }
+
+        .system-status-card {
+            text-align: center;
+            padding: 15px;
+        }
+
+        .system-status-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .permission-group {
+            border: 1px solid #e0e0e0;
+            border-radius: 0.5rem;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Шапка с навигационным меню -->
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container">
+                <a class="navbar-brand" href="#">
+                    <i class="fas fa-industry me-2"></i>
+                    ERP VITTAVENTO
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Главная</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Артикулы</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Склад</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Производство</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Продажи</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Отчеты</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#">Администрирование</a>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-shield me-1"></i> Администратор
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#">Профиль</a></li>
+                                <li><a class="dropdown-item" href="#">Настройки</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#">Выйти</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Основной контент -->
+    <main class="container py-4">
+        <!-- Шапка раздела -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="mb-0">Администрирование</h1>
+            <button class="btn btn-outline-secondary">
+                <i class="fas fa-cog me-1"></i> Системные настройки
+            </button>
+        </div>
+
+        <!-- Статус системы -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Статус системы</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="card system-status-card">
+                                    <div class="system-status-icon text-success">
+                                        <i class="fas fa-server"></i>
+                                    </div>
+                                    <h5>Сервер</h5>
+                                    <p class="mb-0 text-success">Активен</p>
+                                    <small class="text-muted">Загрузка: 23%</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card system-status-card">
+                                    <div class="system-status-icon text-success">
+                                        <i class="fas fa-database"></i>
+                                    </div>
+                                    <h5>База данных</h5>
+                                    <p class="mb-0 text-success">Активна</p>
+                                    <small class="text-muted">Использовано: 56%</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card system-status-card">
+                                    <div class="system-status-icon text-warning">
+                                        <i class="fas fa-memory"></i>
+                                    </div>
+                                    <h5>Память</h5>
+                                    <p class="mb-0 text-warning">Внимание</p>
+                                    <small class="text-muted">Использовано: 82%</small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card system-status-card">
+                                    <div class="system-status-icon text-success">
+                                        <i class="fas fa-hdd"></i>
+                                    </div>
+                                    <h5>Диск</h5>
+                                    <p class="mb-0 text-success">Норма</p>
+                                    <small class="text-muted">Использовано: 45%</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Основная структура страницы -->
+        <div class="row">
+            <!-- Левая колонка с навигацией -->
+            <div class="col-md-3 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Администрирование</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            <a href="#" class="list-group-item list-group-item-action active">Информационная панель</a>
+                            <a href="#" class="list-group-item list-group-item-action">Пользователи</a>
+                            <a href="#" class="list-group-item list-group-item-action">Роли и права</a>
+                            <a href="#" class="list-group-item list-group-item-action">Журнал событий</a>
+                            <a href="#" class="list-group-item list-group-item-action">Резервное копирование</a>
+                            <a href="#" class="list-group-item list-group-item-action">Системные настройки</a>
+                            <a href="#" class="list-group-item list-group-item-action">Интеграции</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Информация о системе</h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-6">Версия:</dt>
+                            <dd class="col-sm-6">2.5.3</dd>
+
+                            <dt class="col-sm-6">Лицензия до:</dt>
+                            <dd class="col-sm-6">31.12.2026</dd>
+
+                            <dt class="col-sm-6">Активных модулей:</dt>
+                            <dd class="col-sm-6">7/7</dd>
+
+                            <dt class="col-sm-6">Пользователей:</dt>
+                            <dd class="col-sm-6">24</dd>
+
+                            <dt class="col-sm-6">Последнее обновление:</dt>
+                            <dd class="col-sm-6">01.05.2025</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Правая колонка с контентом -->
+            <div class="col-md-9">
+                <!-- Карточки разделов администрирования -->
+                <div class="row mb-4">
+                    <div class="col-md-4 mb-4">
+                        <div class="card admin-card">
+                            <div class="card-body text-center">
+                                <div class="admin-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <h5 class="card-title">Пользователи</h5>
+                                <p class="card-text">Управление пользователями и доступом к системе</p>
+                                <div class="mt-3">
+                                    <span class="badge bg-primary">24 пользователя</span>
+                                    <span class="badge bg-success ms-1">18 активных</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="card admin-card">
+                            <div class="card-body text-center">
+                                <div class="admin-icon">
+                                    <i class="fas fa-user-tag"></i>
+                                </div>
+                                <h5 class="card-title">Роли и права</h5>
+                                <p class="card-text">Настройка ролей и прав доступа к функциям системы</p>
+                                <div class="mt-3">
+                                    <span class="badge bg-primary">5 ролей</span>
+                                    <span class="badge bg-info ms-1">42 разрешения</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="card admin-card">
+                            <div class="card-body text-center">
+                                <div class="admin-icon">
+                                    <i class="fas fa-history"></i>
+                                </div>
+                                <h5 class="card-title">Журнал событий</h5>
+                                <p class="card-text">Мониторинг действий пользователей и событий системы</p>
+                                <div class="mt-3">
+                                    <span class="badge bg-primary">1582 события</span>
+                                    <span class="badge bg-warning ms-1">3 предупреждения</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="card admin-card">
+                            <div class="card-body text-center">
+                                <div class="admin-icon">
+                                    <i class="fas fa-database"></i>
+                                </div>
+                                <h5 class="card-title">Резервное копирование</h5>
+                                <p class="card-text">Управление резервными копиями и восстановлением данных</p>
+                                <div class="mt-3">
+                                    <span class="badge bg-success">Выполнено сегодня</span>
+                                    <span class="badge bg-secondary ms-1">10 копий</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="card admin-card">
+                            <div class="card-body text-center">
+                                <div class="admin-icon">
+                                    <i class="fas fa-cogs"></i>
+                                </div>
+                                <h5 class="card-title">Системные настройки</h5>
+                                <p class="card-text">Настройка параметров и конфигурации системы</p>
+                                <div class="mt-3">
+                                    <span class="badge bg-primary">35 параметров</span>
+                                    <span class="badge bg-info ms-1">Базовая конфигурация</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="card admin-card">
+                            <div class="card-body text-center">
+                                <div class="admin-icon">
+                                    <i class="fas fa-plug"></i>
+                                </div>
+                                <h5 class="card-title">Интеграции</h5>
+                                <p class="card-text">Управление интеграциями с внешними системами</p>
+                                <div class="mt-3">
+                                    <span class="badge bg-success">3 активных</span>
+                                    <span class="badge bg-secondary ms-1">2 доступны</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Журнал последних событий -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Последние события системы</h5>
+                        <a href="#" class="btn btn-sm btn-outline-primary">Все события</a>
+                    </div>
+                    <div class="card-body">
+                        <div class="log-entry log-info">
+                            <div class="d-flex justify-content-between">
+                                <strong>Вход в систему</strong>
+                                <small class="text-muted">04.05.2025 09:45</small>
+                            </div>
+                            <p class="mb-0">Пользователь Администратор выполнил вход в систему</p>
+                            <small class="text-muted">IP: 192.168.1.100</small>
+                        </div>
+                        <div class="log-entry log-success">
+                            <div class="d-flex justify-content-between">
+                                <strong>Резервное копирование</strong>
+                                <small class="text-muted">04.05.2025 04:00</small>
+                            </div>
+                            <p class="mb-0">Автоматическое резервное копирование успешно выполнено</p>
+                            <small class="text-muted">Размер: 1.2 ГБ</small>
+                        </div>
+                        <div class="log-entry log-warning">
+                            <div class="d-flex justify-content-between">
+                                <strong>Предупреждение</strong>
+                                <small class="text-muted">03.05.2025 18:22</small>
+                            </div>
+                            <p class="mb-0">Высокая нагрузка на систему</p>
+                            <small class="text-muted">Использование ОЗУ: 85%</small>
+                        </div>
+                        <div class="log-entry log-info">
+                            <div class="d-flex justify-content-between">
+                                <strong>Изменение пользователя</strong>
+                                <small class="text-muted">03.05.2025 15:37</small>
+                            </div>
+                            <p class="mb-0">Пользователь Иванов С.П. обновил профиль</p>
+                            <small class="text-muted">Изменены поля: email, телефон</small>
+                        </div>
+                        <div class="log-entry log-error">
+                            <div class="d-flex justify-content-between">
+                                <strong>Ошибка</strong>
+                                <small class="text-muted">03.05.2025 12:18</small>
+                            </div>
+                            <p class="mb-0">Ошибка соединения с интеграцией 1С</p>
+                            <small class="text-muted">Таймаут соединения</small>
+                        </div>
+                    </div>
+                    <div class="card-footer text-center">
+                        <a href="#" class="btn btn-sm btn-outline-secondary">Показать больше</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Модальное окно управления пользователями -->
+    <div class="modal fade" id="userManagementModal" tabindex="-1" aria-labelledby="userManagementModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userManagementModalLabel">Управление пользователями</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Поиск и фильтрация -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <input type="text" class="form-control" placeholder="Поиск пользователей...">
+                                <button class="btn btn-primary" type="button">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select">
+                                <option value="">Все роли</option>
+                                <option value="admin">Администратор</option>
+                                <option value="manager">Менеджер</option>
+                                <option value="warehouse">Кладовщик</option>
+                                <option value="production">Мастер производства</option>
+                                <option value="accountant">Бухгалтер</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select">
+                                <option value="">Статус</option>
+                                <option value="active">Активные</option>
+                                <option value="inactive">Неактивные</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Таблица пользователей -->
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Имя пользователя</th>
+                                    <th>Email</th>
+                                    <th>Роль</th>
+                                    <th>Статус</th>
+                                    <th>Последний вход</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td>admin</td>
+                                    <td>admin@vittavento.com</td>
+                                    <td>Администратор</td>
+                                    <td><span class="status-active"><i class="fas fa-circle"></i> Активен</span></td>
+                                    <td>04.05.2025 09:45</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" title="Редактировать">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" title="Блокировать">
+                                                <i class="fas fa-ban"></i>
+                                            </button>
+                                            <button class="btn btn-outline-info" title="Сбросить пароль">
+                                                <i class="fas fa-key"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td>ivanov</td>
+                                    <td>ivanov@vittavento.com</td>
+                                    <td>Менеджер</td>
+                                    <td><span class="status-active"><i class="fas fa-circle"></i> Активен</span></td>
+                                    <td>03.05.2025 15:37</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" title="Редактировать">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" title="Блокировать">
+                                                <i class="fas fa-ban"></i>
+                                            </button>
+                                            <button class="btn btn-outline-info" title="Сбросить пароль">
+                                                <i class="fas fa-key"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td>petrov</td>
+                                    <td>petrov@vittavento.com</td>
+                                    <td>Кладовщик</td>
+                                    <td><span class="status-active"><i class="fas fa-circle"></i> Активен</span></td>
+                                    <td>03.05.2025 10:22</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" title="Редактировать">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" title="Блокировать">
+                                                <i class="fas fa-ban"></i>
+                                            </button>
+                                            <button class="btn btn-outline-info" title="Сбросить пароль">
+                                                <i class="fas fa-key"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td>sidorov</td>
+                                    <td>sidorov@vittavento.com</td>
+                                    <td>Мастер производства</td>
+                                    <td><span class="status-inactive"><i class="fas fa-circle"></i> Неактивен</span></td>
+                                    <td>25.04.2025 14:15</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" title="Редактировать">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-outline-success" title="Активировать">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                            <button class="btn btn-outline-info" title="Сбросить пароль">
+                                                <i class="fas fa-key"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>5</td>
+                                    <td>kuznetsov</td>
+                                    <td>kuznetsov@vittavento.com</td>
+                                    <td>Бухгалтер</td>
+                                    <td><span class="status-active"><i class="fas fa-circle"></i> Активен</span></td>
+                                    <td>03.05.2025 11:48</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button class="btn btn-outline-primary" title="Редактировать">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger" title="Блокировать">
+                                                <i class="fas fa-ban"></i>
+                                            </button>
+                                            <button class="btn btn-outline-info" title="Сбросить пароль">
+                                                <i class="fas fa-key"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Пагинация -->
+                    <nav>
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1">Предыдущая</a>
+                            </li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">Следующая</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success">
+                        <i class="fas fa-user-plus me-1"></i> Добавить пользователя
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно управления ролями -->
+    <div class="modal fade" id="rolesManagementModal" tabindex="-1" aria-labelledby="rolesManagementModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rolesManagementModalLabel">Управление ролями и правами</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs mb-4">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#roles-tab">Роли</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#permissions-tab">Разрешения</a>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <!-- Вкладка "Роли" -->
+                        <div class="tab-pane fade show active" id="roles-tab">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Роль</th>
+                                            <th>Описание</th>
+                                            <th>Количество пользователей</th>
+                                            <th>Количество разрешений</th>
+                                            <th>Действия</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>1</td>
+                                            <td>Администратор</td>
+                                            <td>Полный доступ ко всем функциям системы</td>
+                                            <td>1</td>
+                                            <td>42</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-primary" title="Редактировать">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-info" title="Разрешения">
+                                                        <i class="fas fa-key"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>2</td>
+                                            <td>Менеджер</td>
+                                            <td>Доступ к заказам, артикулам, складским остаткам, отчетам</td>
+                                            <td>6</td>
+                                            <td>25</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-primary" title="Редактировать">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-info" title="Разрешения">
+                                                        <i class="fas fa-key"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>3</td>
+                                            <td>Кладовщик</td>
+                                            <td>Управление складскими операциями, инвентаризация</td>
+                                            <td>5</td>
+                                            <td>15</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-primary" title="Редактировать">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-info" title="Разрешения">
+                                                        <i class="fas fa-key"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>4</td>
+                                            <td>Мастер производства</td>
+                                            <td>Управление производственными заказами, операциями, контроль качества</td>
+                                            <td>8</td>
+                                            <td>18</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-primary" title="Редактировать">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-info" title="Разрешения">
+                                                        <i class="fas fa-key"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>5</td>
+                                            <td>Бухгалтер</td>
+                                            <td>Доступ к финансовым отчетам, просмотр движения товаров</td>
+                                            <td>4</td>
+                                            <td>12</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <button class="btn btn-outline-primary" title="Редактировать">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                    <button class="btn btn-outline-info" title="Разрешения">
+                                                        <i class="fas fa-key"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Вкладка "Разрешения" -->
+                        <div class="tab-pane fade" id="permissions-tab">
+                            <div class="permission-group">
+                                <h5>Модуль артикулов</h5>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="perm_articles_view" checked>
+                                            <label class="form-check-label" for="perm_articles_view">
+                                                Просмотр артикулов
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="perm_articles_create" checked>
+                                            <label class="form-check-label" for="perm_articles_create">
+                                                Создание артикулов
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="perm_articles_edit" checked>
+                                            <label class="form-check-label" for="perm_articles_edit">
+                                                Редактирование артикулов
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="perm_articles_delete" checked>
+                                            <label class="form-check-label" for="perm_articles_delete">
+                                                Удаление артикулов
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="permission-group">
+                                <h5>Модуль склада</h5>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="perm_inventory_view" checked>
+                                            <label class="form-check-label" for="perm_inventory_view">
+                                                Просмотр остатков
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="perm_inventory_operation" checked>
+                                            <label class="form-check-label" for="perm_inventory_operation">
+                                                Складские операции
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="perm_inventory_count" checked>
+                                            <label class="form-check-label" for="perm_inventory_count">
+                                                Инвентаризация
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="perm_inventory_report" checked>
+                                            <label class="form-check-label" for="perm_inventory_report">
+                                                Отчеты по складу
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="permission-group">
+                                <h5>Модуль производства</h5>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="perm_production_view" checked>
+                                            <label class="form-check-label" for="perm_production_view">
+                                                Просмотр заказов
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="perm_production_create" checked>
+                                            <label class="form-check-label" for="perm_production_create">
+                                                Создание заказов
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="perm_production_operation" checked>
+                                            <label class="form-check-label" for="perm_production_operation">
+                                                Операции
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="perm_production_report" checked>
+                                            <label class="form-check-label" for="perm_production_report">
+                                                Отчеты производства
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Другие группы разрешений -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success">
+                        <i class="fas fa-plus me-1"></i> Добавить роль
+                    </button>
+                    <button type="button" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i> Сохранить изменения
+                    </button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Подвал страницы -->
+    <footer class="bg-dark text-white py-4 mt-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>ERP VITTAVENTO</h5>
+                    <p>Система управления производством дверных шаблонов, фрез, комплектующих, межкомнатных дверей и станков ЧПУ</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>&copy; 2023-2025 VITTAVENTO. Все права защищены.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Кастомные скрипты -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Инициализация всплывающих подсказок
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+            tooltipTriggerList.map(function(tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl, {
+                    placement: 'top',
+                    delay: { show: 500, hide: 100 }
+                });
+            });
+
+            // Открытие модальных окон через карточки
+            document.querySelectorAll('.admin-card').forEach(function(card) {
+                card.addEventListener('click', function() {
+                    const cardTitle = this.querySelector('.card-title').textContent.trim();
+
+                    if (cardTitle === 'Пользователи') {
+                        const userModal = new bootstrap.Modal(document.getElementById('userManagementModal'));
+                        userModal.show();
+                    } else if (cardTitle === 'Роли и права') {
+                        const rolesModal = new bootstrap.Modal(document.getElementById('rolesManagementModal'));
+                        rolesModal.show();
+                    }
+                    // Другие модальные окна для других карточек
+                });
+            });
+        });
+    </script>
+</body>
+</html>

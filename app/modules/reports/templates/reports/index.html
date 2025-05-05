@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Модуль отчетов | ERP VITTAVENTO</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+
+    <!-- Кастомные стили -->
+    <style>
+        body {
+            font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        main {
+            flex: 1;
+        }
+
+        .card {
+            border-radius: 0.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-bottom: 1.5rem;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .report-card {
+            cursor: pointer;
+        }
+
+        .report-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #3498db;
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: #3498db;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            border-color: #3498db;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        .table th {
+            background-color: #f8f9fa;
+        }
+
+        .favorite-report {
+            color: #f39c12;
+        }
+    </style>
+</head>
+<body>
+    <!-- Шапка с навигационным меню -->
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container">
+                <a class="navbar-brand" href="#">
+                    <i class="fas fa-industry me-2"></i>
+                    ERP VITTAVENTO
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Главная</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Артикулы</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Склад</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Производство</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Продажи</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#">Отчеты</a>
+                        </li>
+                    </ul>
+                    <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user me-1"></i> Менеджер
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="#">Профиль</a></li>
+                                <li><a class="dropdown-item" href="#">Настройки</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#">Выйти</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Основной контент -->
+    <main class="container py-4">
+        <!-- Шапка раздела -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="mb-0">Отчеты</h1>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createReportModal">
+                <i class="fas fa-plus me-1"></i> Новый отчет
+            </button>
+        </div>
+
+        <!-- Основная структура страницы -->
+        <div class="row">
+            <!-- Левая колонка с фильтрами -->
+            <div class="col-md-3 mb-4">
+                <!-- Блок категорий -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Категории</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            <a href="#" class="list-group-item list-group-item-action active">Все отчеты</a>
+                            <a href="#" class="list-group-item list-group-item-action">Продажи</a>
+                            <a href="#" class="list-group-item list-group-item-action">Склад</a>
+                            <a href="#" class="list-group-item list-group-item-action">Производство</a>
+                            <a href="#" class="list-group-item list-group-item-action">Финансы</a>
+                            <a href="#" class="list-group-item list-group-item-action">Аналитика</a>
+                            <a href="#" class="list-group-item list-group-item-action">Избранное</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Блок выбора периода -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Период</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <select class="form-select">
+                                <option value="today">Сегодня</option>
+                                <option value="yesterday">Вчера</option>
+                                <option value="week">Текущая неделя</option>
+                                <option value="month" selected>Текущий месяц</option>
+                                <option value="quarter">Текущий квартал</option>
+                                <option value="year">Текущий год</option>
+                                <option value="custom">Произвольный период</option>
+                            </select>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label">С</label>
+                                <input type="date" class="form-control" value="2025-04-01">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">По</label>
+                                <input type="date" class="form-control" value="2025-04-30">
+                            </div>
+                        </div>
+                        <div class="d-grid">
+                            <button class="btn btn-primary">Применить</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Блок недавних отчетов -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Недавние отчеты</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                Продажи по клиентам
+                                <span class="badge bg-primary rounded-pill">03.05</span>
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                Анализ складских остатков
+                                <span class="badge bg-primary rounded-pill">02.05</span>
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                Производственная эффективность
+                                <span class="badge bg-primary rounded-pill">30.04</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Правая колонка с отчетами -->
+            <div class="col-md-9">
+                <!-- Карточки отчетов (первый ряд) -->
+                <div class="row mb-4">
+                    <!-- Отчет "Анализ продаж" -->
+                    <div class="col-md-4">
+                        <div class="card report-card" data-bs-toggle="modal" data-bs-target="#reportModal">
+                            <div class="card-body text-center">
+                                <div class="report-icon">
+                                    <i class="fas fa-chart-pie"></i>
+                                </div>
+                                <h5 class="card-title">Анализ продаж</h5>
+                                <p class="card-text text-muted">Отчет по продажам в разрезе клиентов и категорий товаров</p>
+                                <div class="d-flex justify-content-between mt-3">
+                                    <small class="text-muted">Обновлен: 03.05.2025</small>
+                                    <i class="fas fa-star favorite-report"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Отчет "Складские остатки" -->
+                    <div class="col-md-4">
+                        <div class="card report-card" data-bs-toggle="modal" data-bs-target="#reportModal">
+                            <div class="card-body text-center">
+                                <div class="report-icon">
+                                    <i class="fas fa-warehouse"></i>
+                                </div>
+                                <h5 class="card-title">Складские остатки</h5>
+                                <p class="card-text text-muted">Текущие остатки на складах с анализом оборачиваемости</p>
+                                <div class="d-flex justify-content-between mt-3">
+                                    <small class="text-muted">Обновлен: 04.05.2025</small>
+                                    <i class="fas fa-star favorite-report"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Отчет "Производство" -->
+                    <div class="col-md-4">
+                        <div class="card report-card" data-bs-toggle="modal" data-bs-target="#reportModal">
+                            <div class="card-body text-center">
+                                <div class="report-icon">
+                                    <i class="fas fa-industry"></i>
+                                </div>
+                                <h5 class="card-title">Производство</h5>
+                                <p class="card-text text-muted">Эффективность производства и выполнение плана</p>
+                                <div class="d-flex justify-content-between mt-3">
+                                    <small class="text-muted">Обновлен: 02.05.2025</small>
+                                    <i class="far fa-star"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Карточки отчетов (второй ряд) -->
+                <div class="row mb-4">
+                    <!-- Отчет "Динамика продаж" -->
+                    <div class="col-md-4">
+                        <div class="card report-card" data-bs-toggle="modal" data-bs-target="#reportModal">
+                            <div class="card-body text-center">
+                                <div class="report-icon">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                                <h5 class="card-title">Динамика продаж</h5>
+                                <p class="card-text text-muted">Анализ динамики продаж по месяцам и прогноз</p>
+                                <div class="d-flex justify-content-between mt-3">
+                                    <small class="text-muted">Обновлен: 01.05.2025</small>
+                                    <i class="far fa-star"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Отчет "Рентабельность" -->
+                    <div class="col-md-4">
+                        <div class="card report-card" data-bs-toggle="modal" data-bs-target="#reportModal">
+                            <div class="card-body text-center">
+                                <div class="report-icon">
+                                    <i class="fas fa-hand-holding-usd"></i>
+                                </div>
+                                <h5 class="card-title">Рентабельность</h5>
+                                <p class="card-text text-muted">Анализ рентабельности продаж по категориям и клиентам</p>
+                                <div class="d-flex justify-content-between mt-3">
+                                    <small class="text-muted">Обновлен: 30.04.2025</small>
+                                    <i class="far fa-star"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Отчет "Логистика" -->
+                    <div class="col-md-4">
+                        <div class="card report-card" data-bs-toggle="modal" data-bs-target="#reportModal">
+                            <div class="card-body text-center">
+                                <div class="report-icon">
+                                    <i class="fas fa-truck"></i>
+                                </div>
+                                <h5 class="card-title">Логистика</h5>
+                                <p class="card-text text-muted">Отчет по доставкам и эффективности логистики</p>
+                                <div class="d-flex justify-content-between mt-3">
+                                    <small class="text-muted">Обновлен: 28.04.2025</small>
+                                    <i class="far fa-star"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Таблица сохраненных отчетов -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Сохраненные отчеты</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Название отчета</th>
+                                        <th>Категория</th>
+                                        <th>Создан</th>
+                                        <th>Последний запуск</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Анализ топ-10 клиентов</td>
+                                        <td>Продажи</td>
+                                        <td>15.03.2025</td>
+                                        <td>03.05.2025</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary" title="Просмотр">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn btn-outline-success" title="Запустить">
+                                                    <i class="fas fa-play"></i>
+                                                </button>
+                                                <button class="btn btn-outline-secondary" title="Экспорт">
+                                                    <i class="fas fa-download"></i>
+                                                </button>
+                                                <button class="btn btn-outline-danger" title="Удалить">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Оборачиваемость склада</td>
+                                        <td>Склад</td>
+                                        <td>10.02.2025</td>
+                                        <td>02.05.2025</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary" title="Просмотр">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn btn-outline-success" title="Запустить">
+                                                    <i class="fas fa-play"></i>
+                                                </button>
+                                                <button class="btn btn-outline-secondary" title="Экспорт">
+                                                    <i class="fas fa-download"></i>
+                                                </button>
+                                                <button class="btn btn-outline-danger" title="Удалить">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Производительность станков</td>
+                                        <td>Производство</td>
+                                        <td>05.01.2025</td>
+                                        <td>30.04.2025</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary" title="Просмотр">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn btn-outline-success" title="Запустить">
+                                                    <i class="fas fa-play"></i>
+                                                </button>
+                                                <button class="btn btn-outline-secondary" title="Экспорт">
+                                                    <i class="fas fa-download"></i>
+                                                </button>
+                                                <button class="btn btn-outline-danger" title="Удалить">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Модальное окно просмотра отчета -->
+    <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reportModalLabel">Анализ продаж</h5>
+                    <div class="ms-auto me-2">
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-download me-1"></i> Экспорт
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                                <li><a class="dropdown-item" href="#">PDF</a></li>
+                                <li><a class="dropdown-item" href="#">Excel</a></li>
+                                <li><a class="dropdown-item" href="#">CSV</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- График динамики продаж -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Динамика продаж по месяцам</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        <canvas id="salesChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Графики по категориям и клиентам -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Продажи по категориям</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        <canvas id="categoriesChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Топ-5 клиентов</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        <canvas id="customersChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Таблица детализации -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Детализация продаж</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>Клиент</th>
+                                            <th>Категория</th>
+                                            <th>Кол-во заказов</th>
+                                            <th>Сумма</th>
+                                            <th>Доля, %</th>
+                                            <th>Динамика</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>ООО "МебельСтрой"</td>
+                                            <td>Двери</td>
+                                            <td>12</td>
+                                            <td>850 000 ₽</td>
+                                            <td>28.3%</td>
+                                            <td><span class="text-success">+15%</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>ООО "Двери-Люкс"</td>
+                                            <td>Двери</td>
+                                            <td>8</td>
+                                            <td>620 000 ₽</td>
+                                            <td>20.7%</td>
+                                            <td><span class="text-success">+5%</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>ООО "КомплектПром"</td>
+                                            <td>Комплектующие</td>
+                                            <td>15</td>
+                                            <td>430 000 ₽</td>
+                                            <td>14.3%</td>
+                                            <td><span class="text-danger">-3%</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>ООО "СтройДвери"</td>
+                                            <td>Двери</td>
+                                            <td>5</td>
+                                            <td>380 000 ₽</td>
+                                            <td>12.7%</td>
+                                            <td><span class="text-success">+8%</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>ИП Смирнов А.В.</td>
+                                            <td>Комплектующие</td>
+                                            <td>18</td>
+                                            <td>320 000 ₽</td>
+                                            <td>10.7%</td>
+                                            <td><span class="text-success">+12%</span></td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-light">
+                                            <td colspan="3" class="text-end fw-bold">Итого:</td>
+                                            <td class="fw-bold">3 000 000 ₽</td>
+                                            <td class="fw-bold">100%</td>
+                                            <td><span class="text-success">+7.5%</span></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно создания отчета -->
+    <div class="modal fade" id="createReportModal" tabindex="-1" aria-labelledby="createReportModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createReportModalLabel">Новый отчет</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="reportForm">
+                        <!-- Название отчета -->
+                        <div class="mb-3">
+                            <label for="reportName" class="form-label">Название отчета</label>
+                            <input type="text" class="form-control" id="reportName" placeholder="Введите название отчета">
+                        </div>
+
+                        <!-- Категория отчета -->
+                        <div class="mb-3">
+                            <label for="reportCategory" class="form-label">Категория</label>
+                            <select class="form-select" id="reportCategory">
+                                <option value="">Выберите категорию</option>
+                                <option value="sales">Продажи</option>
+                                <option value="inventory">Склад</option>
+                                <option value="production">Производство</option>
+                                <option value="finance">Финансы</option>
+                                <option value="analytics">Аналитика</option>
+                            </select>
+                        </div>
+
+                        <!-- Тип отчета -->
+                        <div class="mb-3">
+                            <label for="reportType" class="form-label">Тип отчета</label>
+                            <select class="form-select" id="reportType">
+                                <option value="">Выберите тип отчета</option>
+                                <option value="table">Таблица</option>
+                                <option value="chart">График</option>
+                                <option value="pivot">Сводная таблица</option>
+                                <option value="kpi">Ключевые показатели</option>
+                                <option value="custom">Пользовательский</option>
+                            </select>
+                        </div>
+
+                        <!-- Период отчета -->
+                        <div class="mb-3">
+                            <label for="reportPeriod" class="form-label">Период</label>
+                            <select class="form-select" id="reportPeriod">
+                                <option value="day">День</option>
+                                <option value="week">Неделя</option>
+                                <option value="month" selected>Месяц</option>
+                                <option value="quarter">Квартал</option>
+                                <option value="year">Год</option>
+                                <option value="custom">Произвольный период</option>
+                            </select>
+                        </div>
+
+                        <!-- Данные для отчета -->
+                        <div class="mb-3">
+                            <label class="form-label">Данные для отчета</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="sales" checked>
+                                <label class="form-check-label" for="sales">Продажи</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="clients" checked>
+                                <label class="form-check-label" for="clients">Клиенты</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="products" checked>
+                                <label class="form-check-label" for="products">Товары</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="categories" checked>
+                                <label class="form-check-label" for="categories">Категории</label>
+                            </div>
+                        </div>
+
+                        <!-- Описание отчета -->
+                        <div class="mb-3">
+                            <label for="reportDescription" class="form-label">Описание</label>
+                            <textarea class="form-control" id="reportDescription" rows="3" placeholder="Введите описание отчета"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-success">Создать и выполнить</button>
+                    <button type="button" class="btn btn-primary">Сохранить шаблон</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Подвал страницы -->
+    <footer class="bg-dark text-white py-4 mt-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>ERP VITTAVENTO</h5>
+                    <p>Система управления производством дверных шаблонов, фрез, комплектующих, межкомнатных дверей и станков ЧПУ</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p>&copy; 2023-2025 VITTAVENTO. Все права защищены.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Кастомные скрипты -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Инициализация всплывающих подсказок
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+            tooltipTriggerList.map(function(tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl, {
+                    placement: 'top',
+                    delay: { show: 500, hide: 100 }
+                });
+            });
+
+            // График продаж по месяцам
+            const salesChartCtx = document.getElementById('salesChart');
+            if (salesChartCtx) {
+                new Chart(salesChartCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'],
+                        datasets: [{
+                            label: '2025 год',
+                            data: [3200000, 2800000, 3500000, 3000000, 0, 0, 0, 0, 0, 0, 0, 0],
+                            borderColor: '#3498db',
+                            backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }, {
+                            label: '2024 год',
+                            data: [2500000, 2200000, 2800000, 2700000, 3100000, 3400000, 3600000, 3200000, 3300000, 3500000, 3800000, 4000000],
+                            borderColor: '#2ecc71',
+                            backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            title: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value / 1000000 + ' млн ₽';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // График продаж по категориям
+            const categoriesChartCtx = document.getElementById('categoriesChart');
+            if (categoriesChartCtx) {
+                new Chart(categoriesChartCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Двери', 'Комплектующие', 'Фрезы', 'Шаблоны', 'Прочее'],
+                        datasets: [{
+                            data: [60, 20, 10, 5, 5],
+                            backgroundColor: [
+                                '#3498db',
+                                '#2ecc71',
+                                '#f39c12',
+                                '#9b59b6',
+                                '#e74c3c'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right'
+                            }
+                        }
+                    }
+                });
+            }
+
+            // График топ-5 клиентов
+            const customersChartCtx = document.getElementById('customersChart');
+            if (customersChartCtx) {
+                new Chart(customersChartCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['ООО "МебельСтрой"', 'ООО "Двери-Люкс"', 'ООО "КомплектПром"', 'ООО "СтройДвери"', 'ИП Смирнов А.В.'],
+                        datasets: [{
+                            label: 'Сумма продаж, тыс. ₽',
+                            data: [850, 620, 430, 380, 320],
+                            backgroundColor: '#3498db'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + ' тыс. ₽';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Обработка добавления в избранное
+            const favoriteStars = document.querySelectorAll('.fa-star');
+            favoriteStars.forEach(star => {
+                star.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    this.classList.toggle('far');
+                    this.classList.toggle('fas');
+                    this.classList.toggle('favorite-report');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
