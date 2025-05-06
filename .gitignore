@@ -1,8 +1,20 @@
-.venv/
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
 *.log
+*.sqlite3
+
+# Env files
 .env
+.venv/
+
+# Flask-specific
 instance/
-.mypy_cache/
+config/.flaskenv
+
+# VS Code / PyCharm
 .idea/
+.vscode/
+
+# OS
+.DS_Store
