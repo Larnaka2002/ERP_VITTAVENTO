@@ -1,9 +1,10 @@
 """
 Точка входа для запуска приложения ERP_VITTAVENTO локально
 """
-
-from app import create_app, db
 from flask_migrate import upgrade
+from app import create_app
+import click
+
 
 app = create_app()
 
