@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Просмотр артикула | ERP_VITTAVENTO{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Просмотр артикула</h1>
+
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">Основная информация</div>
+        <div class="card-body">
+            <p><strong>Код:</strong> {{ article.code }}</p>
+            <p><strong>Описание:</strong> {{ article.description }}</p>
+            <p><strong>Дата создания:</strong> {{ article.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-dark text-white">Характеристики</div>
+        <div class="card-body">
+            <p>{{ article.characteristics }}</p>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">Дополнительные свойства</div>
+        <div class="card-body">
+            <p>{{ article.additional_properties }}</p>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">Вес</div>
+        <div class="card-body">
+            <p><strong>Округлённый вес (в коде):</strong> {{ article.weight_code }} lb</p>
+            <p><strong>Фактический вес:</strong> {{ article.weight_real }} lb</p>
+            <button class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#editWeightModal">
+                Редактировать вес
+            </button>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-dark text-white">Компоненты сборки</div>
+        <div class="card-body">
+            {% if components %}
+                <ul class="list-group">
+                    {% for component in components %}
+                        <li class="list-group-item">
+                            {{ component.code }} — {{ component.description }} (×{{ component.quantity }})
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">Нет компонентов.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header bg-light">Изображения</div>
+        <div class="card-body">
+            <p class="text-muted">Галерея изображений будет здесь...</p>
+        </div>
+    </div>
+
+    <a href="{{ url_for('articles.index') }}" class="btn btn-secondary">Назад</a>
+</div>
+
+<!-- Модальное окно редактирования веса -->
+<div class="modal fade" id="editWeightModal" tabindex="-1" aria-labelledby="editWeightModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('articles.update_weight', article_id=article.id) }}">
+      {{ csrf_token() }}
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editWeightModalLabel">Редактирование веса</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="weight_real" class="form-label">Введите фактический вес (lb)</label>
+            <input type="number" step="0.01" name="weight_real" id="weight_real" class="form-control" value="{{ article.weight_real }}" required>
+          </div>
+          <p class="text-muted">После сохранения вес будет пересчитан и округлён для кода.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+          <button type="submit" class="btn btn-primary">Сохранить</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

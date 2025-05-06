@@ -22,6 +22,8 @@ class Article(db.Model):
     additional_properties = Column(Text, nullable=True)
 
     created_at = Column(DateTime, default=func.now())
+    weight_real = db.Column(db.Float)
+    weight_code = db.Column(db.Integer)
 
     # Иерархия — ссылка на родительский артикул
     parent_id = db.Column(db.Integer, db.ForeignKey('articles.id'), nullable=True)

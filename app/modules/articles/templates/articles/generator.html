@@ -1,96 +1,146 @@
 {% extends 'base.html' %}
-{% block title %}Генератор артикулов | ERP_VITTAVENTO{% endblock %}
 
-{% block header %}
-<h1>Генератор артикулов</h1>
-<p class="text-muted">Создание артикула с иерархией и компонентами</p>
-<hr>
-{% endblock %}
+{% block title %}Генератор артикула | ERP_VITTAVENTO{% endblock %}
 
 {% block content %}
-<form method="POST">
-  {{ form.hidden_tag() }}
+<div class="container mt-4">
+  <h1 class="mb-3">Генератор артикула</h1>
+  <form method="POST" action="">
+    {{ form.hidden_tag() }}
 
-  <div class="row">
-    <div class="col-md-6 mb-3">
-      {{ form.prefix.label(class="form-label") }}
-      {{ form.prefix(class="form-control") }}
+    <div class="row mb-3">
+      <div class="col-md-3">
+        <label class="form-label">Вид изделия</label>
+        <select id="type-selector" class="form-select">
+          <option value="D">Дверь</option>
+          <option value="W">Окно</option>
+          <option value="T">Шаблон</option>
+          <option value="M">Станок</option>
+        </select>
+        <div class="form-text">Выберите вид изделия</div>
+      </div>
+      <div class="col-md-3">
+        {{ form.prefix.label(class="form-label") }}
+        {{ form.prefix(class="form-control", id="prefix-field") }}
+        <div class="form-text">Первая буква артикула</div>
+      </div>
+      <div class="col-md-3">
+        {{ form.hierarchy_code.label(class="form-label") }}
+        {{ form.hierarchy_code(class="form-control") }}
+        <div class="form-text">Код иерархии (1/2/3/4)</div>
+      </div>
+      <div class="col-md-3">
+        {{ form.material_code.label(class="form-label") }}
+        {{ form.material_code(class="form-control") }}
+        <div class="form-text">Код модели (2 цифры)</div>
+      </div>
     </div>
-    <div class="col-md-6 mb-3">
-      {{ form.hierarchy_code.label(class="form-label") }}
-      {{ form.hierarchy_code(class="form-control") }}
-    </div>
-  </div>
 
-  <div class="row">
-    <div class="col-md-4 mb-3">
-      {{ form.material_code.label(class="form-label") }}
-      {{ form.material_code(class="form-control") }}
-    </div>
-    <div class="col-md-4 mb-3">
-      {{ form.color.label(class="form-label") }}
-      {{ form.color(class="form-control") }}
-    </div>
-    <div class="col-md-4 mb-3">
-      {{ form.material_type.label(class="form-label") }}
-      {{ form.material_type(class="form-control") }}
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-md-6 mb-3">
-      {{ form.name.label(class="form-label") }}
-      {{ form.name(class="form-control") }}
-    </div>
-    <div class="col-md-6 mb-3">
-      {{ form.manufacturer.label(class="form-label") }}
-      {{ form.manufacturer(class="form-control") }}
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-md-6 mb-3">
-      {{ form.country.label(class="form-label") }}
-      {{ form.country(class="form-control") }}
-    </div>
-    <div class="col-md-6 mb-3">
-      {{ form.characteristics.label(class="form-label") }}
-      {{ form.characteristics(class="form-control", rows=3) }}
-    </div>
-  </div>
-
-  <div class="row mb-3">
-    <div class="col">
-      {{ form.additional_properties.label(class="form-label") }}
-      {{ form.additional_properties(class="form-control", rows=3) }}
-    </div>
-  </div>
-
-  <hr>
-  <h5>Компоненты сборки</h5>
-  {% for component_form in form.components %}
-    <div class="row mb-2">
-      <div class="col-md-8">
-        {{ component_form.component_id.label(class="form-label") }}
-        {{ component_form.component_id(class="form-select") }}
+    <div class="row mb-3">
+      <div class="col-md-4">
+        {{ form.color.label(class="form-label") }}
+        {{ form.color(class="form-control") }}
+        <div class="form-text">Код цвета (2 цифры)</div>
       </div>
       <div class="col-md-4">
-        {{ component_form.quantity.label(class="form-label") }}
-        {{ component_form.quantity(class="form-control") }}
+        {{ form.material_type.label(class="form-label") }}
+        {{ form.material_type(class="form-control") }}
+        <div class="form-text">Код веса (3 цифры, округление вверх)</div>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Вес (точный, lb)</label>
+        <input type="number" step="0.01" name="weight_real" class="form-control" required>
+        <div class="form-text">Фактический вес для логистики</div>
       </div>
     </div>
-  {% endfor %}
 
-  <div class="mt-3">
-    {{ form.submit(class="btn btn-primary") }}
-    <a href="{{ url_for('articles.index') }}" class="btn btn-secondary ms-2">Назад</a>
-  </div>
-</form>
+    <div class="row mb-3">
+      <div class="col-md-6">
+        {{ form.name.label(class="form-label") }}
+        {{ form.name(class="form-control") }}
+        <div class="form-text">Название изделия</div>
+      </div>
+      <div class="col-md-3">
+        {{ form.manufacturer.label(class="form-label") }}
+        {{ form.manufacturer(class="form-control") }}
+      </div>
+      <div class="col-md-3">
+        {{ form.country.label(class="form-label") }}
+        {{ form.country(class="form-control") }}
+      </div>
+    </div>
 
-{% if article_code %}
-<hr>
-<div class="alert alert-success mt-4">
-  <strong>Сгенерированный артикул:</strong> {{ article_code }}
+    <div class="row mb-3">
+      <div class="col-md-6">
+        {{ form.characteristics.label(class="form-label") }}
+        {{ form.characteristics(class="form-control", rows=3) }}
+      </div>
+      <div class="col-md-6">
+        {{ form.additional_properties.label(class="form-label") }}
+        {{ form.additional_properties(class="form-control", rows=3) }}
+      </div>
+    </div>
+
+    <hr>
+    <h5>Компоненты сборки</h5>
+    <div id="components-wrapper">
+      {% for component_form in form.components %}
+        <div class="row mb-2 component-group">
+          <div class="col-md-8">
+            <label class="form-label">Компонент</label>
+            {{ component_form.component_id(class="form-select") }}
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Количество</label>
+            {{ component_form.quantity(class="form-control") }}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    <button type="button" class="btn btn-outline-secondary mb-3" id="add-component">+ Добавить компонент</button>
+
+    <div class="mb-3">
+      {{ form.submit(class="btn btn-primary") }}
+      <a href="{{ url_for('articles.index') }}" class="btn btn-secondary ms-2">Назад</a>
+    </div>
+
+    {% if article_code %}
+      <div class="alert alert-success">
+        <strong>Сгенерированный артикул:</strong> {{ article_code }}
+      </div>
+    {% endif %}
+  </form>
 </div>
-{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.getElementById('type-selector').addEventListener('change', function () {
+    const prefixField = document.getElementById('prefix-field');
+    prefixField.value = this.value;
+  });
+
+  document.getElementById('add-component').addEventListener('click', function () {
+    const container = document.getElementById('components-wrapper');
+    const index = container.querySelectorAll('.component-group').length;
+
+    const newGroup = document.createElement('div');
+    newGroup.className = 'row mb-2 component-group';
+    newGroup.innerHTML = `
+      <div class="col-md-8">
+        <label class="form-label">Компонент</label>
+        <select name="components-${index}-component_id" class="form-select">
+          {% for a in form.components[0].component_id.choices %}
+            <option value="{{ a[0] }}">{{ a[1] }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Количество</label>
+        <input type="number" name="components-${index}-quantity" class="form-control" value="1" />
+      </div>
+    `;
+    container.appendChild(newGroup);
+  });
+</script>
 {% endblock %}

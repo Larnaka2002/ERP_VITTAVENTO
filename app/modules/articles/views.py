@@ -1,9 +1,9 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app.forms.article_form import ArticleForm
-from app.forms.generator_form import GeneratorForm  # Новый импорт формы генератора
-from app.models.article import Article
+from app.forms.generator_form import GeneratorForm
+from app.models.article import Article, article_components
 from app.extensions import db
-from app.models.article import article_components
+from sqlalchemy import select
 
 articles_bp = Blueprint(
     name='articles',
@@ -11,70 +11,44 @@ articles_bp = Blueprint(
     template_folder='templates'
 )
 
-
 @articles_bp.route('/', methods=['GET'])
 def index():
     articles = Article.query.order_by(Article.created_at.desc()).all()
     return render_template('articles/index.html', articles=articles)
 
-
+# Ручное создание артикула
 @articles_bp.route('/create', methods=['GET', 'POST'], endpoint='create_article')
 def create_article():
     form = ArticleForm()
-    if request.method == 'POST' and form.validate_on_submit():
+    if form.validate_on_submit():
         new_article = Article(
             code=form.code.data,
-            description=form.description.data
+            description=form.description.data,
+            characteristics=form.characteristics.data,
+            additional_properties=form.additional_properties.data,
+            weight_real=form.weight_real.data,
+            weight_code=form.weight_code.data
         )
         db.session.add(new_article)
         db.session.commit()
+        flash("Артикул успешно создан.", "success")
         return redirect(url_for('articles.index'))
 
     return render_template('articles/create_article.html', form=form)
 
-
-@articles_bp.route('/edit/<int:article_id>', methods=['GET', 'POST'], endpoint='edit_article')
-def edit_article(article_id):
-    article = Article.query.get_or_404(article_id)
-    form = ArticleForm(obj=article)
-    if request.method == 'POST' and form.validate_on_submit():
-        article.code = form.code.data
-        article.description = form.description.data
-        db.session.commit()
-        flash('Артикул обновлён успешно.', 'success')
-        return redirect(url_for('articles.index'))
-    return render_template('articles/edit_article.html', form=form, article=article)
-
-
-@articles_bp.route('/delete/<int:article_id>', methods=['GET'], endpoint='delete_article')
-def delete_article(article_id):
-    article = Article.query.get_or_404(article_id)
-    db.session.delete(article)
-    db.session.commit()
-    flash('Артикул удалён.', 'success')
-    return redirect(url_for('articles.index'))
-
-
+# Генератор артикула
 @articles_bp.route('/generator', methods=['GET', 'POST'], endpoint='article_generator')
 def article_generator():
     form = GeneratorForm()
-
-    # Загружаем доступные артикулы для компонента
     available_articles = Article.query.order_by(Article.code.asc()).all()
     component_choices = [(a.id, f"{a.code} — {a.description}") for a in available_articles]
 
-    # При GET — очищаем и добавляем одну строку
-    if request.method == 'GET':
-        form.components.entries = []
-        form.components.append_entry({'component_id': None, 'quantity': 1})
-
-    # Обновляем choices для каждого подформы
     for component_form in form.components.entries:
         component_form.form.component_id.choices = component_choices
 
     article_code = None
 
-    if request.method == 'POST' and form.validate_on_submit():
+    if form.validate_on_submit():
         base_code = (
             f"{form.prefix.data.upper()}"
             f"{form.hierarchy_code.data}"
@@ -104,7 +78,9 @@ def article_generator():
             code=article_code,
             description=form.name.data,
             characteristics=form.characteristics.data,
-            additional_properties=form.additional_properties.data
+            additional_properties=form.additional_properties.data,
+            weight_real=form.weight_real.data,
+            weight_code=form.weight_code.data
         )
         db.session.add(new_article)
         db.session.flush()
@@ -131,12 +107,11 @@ def article_generator():
 
     return render_template('articles/generator.html', form=form, article_code=article_code)
 
-
+# Просмотр артикула
 @articles_bp.route('/view/<int:article_id>', methods=['GET'], endpoint='view_article')
 def view_article(article_id):
     article = Article.query.get_or_404(article_id)
 
-    # Получаем компоненты и их количество
     components = db.session.execute(
         article_components.select().where(article_components.c.parent_id == article.id)
     ).fetchall()
@@ -157,3 +132,46 @@ def view_article(article_id):
         article=article,
         components=detailed_components
     )
+@articles_bp.route('/edit/<int:article_id>', methods=['GET', 'POST'], endpoint='edit_article')
+def edit_article(article_id):
+    article = Article.query.get_or_404(article_id)
+    form = ArticleForm(obj=article)
+
+    if request.method == 'POST' and form.validate_on_submit():
+        article.code = form.code.data
+        article.description = form.description.data
+        article.characteristics = form.characteristics.data
+        article.additional_properties = form.additional_properties.data
+        article.weight_real = form.weight_real.data
+        article.weight_code = form.weight_code.data
+        db.session.commit()
+        flash('Артикул успешно обновлён.', 'success')
+        return redirect(url_for('articles.view_article', article_id=article.id))
+
+    return render_template('articles/edit_article.html', form=form, article=article)
+
+@articles_bp.route('/delete/<int:article_id>', methods=['POST'], endpoint='delete_article')
+def delete_article(article_id):
+    article = Article.query.get_or_404(article_id)
+    db.session.delete(article)
+    db.session.commit()
+    flash('Артикул успешно удалён.', 'success')
+    return redirect(url_for('articles.index'))
+
+# Обновление веса артикула
+@articles_bp.route('/update_weight/<int:article_id>', methods=['POST'], endpoint='update_weight')
+def update_weight(article_id):
+    article = Article.query.get_or_404(article_id)
+
+    try:
+        new_weight = float(request.form.get('weight_real'))
+        article.weight_real = new_weight
+        article.weight_code = round(new_weight)
+        db.session.commit()
+        flash("Вес успешно обновлён", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash("Ошибка при обновлении веса", "danger")
+        print(e)
+
+    return redirect(url_for('articles.view_article', article_id=article.id))
