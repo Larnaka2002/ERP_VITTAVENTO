@@ -18,8 +18,8 @@ class Article(db.Model):
     description = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     # Новые поля
-    characteristics = Column(Text, nullable=True)
-    additional_properties = Column(Text, nullable=True)
+    characteristics = db.Column(db.Text, nullable=True)
+    additional_properties = db.Column(db.Text, nullable=True)
 
     created_at = Column(DateTime, default=func.now())
     weight_real = db.Column(db.Float)
