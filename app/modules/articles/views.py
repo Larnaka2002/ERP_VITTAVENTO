@@ -3,6 +3,8 @@ from app.forms.article_form import ArticleForm
 from app.forms.generator_form import GeneratorForm
 from app.models.article import Article, article_components
 from app.extensions import db
+from flask import redirect, url_for
+from app.modules.articles import articles_bp
 from sqlalchemy import select
 
 articles_bp = Blueprint(
@@ -175,3 +177,7 @@ def update_weight(article_id):
         print(e)
 
     return redirect(url_for('articles.view_article', article_id=article.id))
+
+@articles_bp.route('/')
+def home():
+    return redirect(url_for('articles.index'))
