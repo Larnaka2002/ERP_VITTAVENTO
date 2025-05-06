@@ -4,16 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b0322003-5220-4f74-b382-b542cedb6956" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/version_push.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/forms/generator_form.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/forms/generator_form.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/models/article.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/models/article.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/modules/articles/templates/articles/generator.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/modules/articles/templates/articles/generator.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/modules/articles/templates/articles/view_article.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/templates/articles/view_article.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/modules/articles/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/modules/articles/views.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/logs/erp_vittavento.log" beforeDir="false" afterPath="$PROJECT_DIR$/logs/erp_vittavento.log" afterDir="false" />
-    </list>
+    <list default="true" id="b0322003-5220-4f74-b382-b542cedb6956" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -116,7 +107,7 @@
       <workItem from="1746161909935" duration="15217000" />
       <workItem from="1746213281477" duration="6396000" />
       <workItem from="1746219697006" duration="9637000" />
-      <workItem from="1746243969548" duration="70003000" />
+      <workItem from="1746243969548" duration="70627000" />
     </task>
     <servers />
   </component>
