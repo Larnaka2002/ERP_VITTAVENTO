@@ -21,6 +21,8 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'postgresql://localhost/erp_vittavento')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
+    WTF_CSRF_ENABLED = False
+
     # Настройки приложения
     APP_NAME = 'ERP_VITTAVENTO'
 
@@ -46,6 +48,7 @@ class DevelopmentConfig(Config):
     # Дополнительные настройки для разработки
     SQLALCHEMY_ECHO = True
     TEMPLATES_AUTO_RELOAD = True
+    WTF_CSRF_ENABLED = False
 
 
 class TestingConfig(Config):
