@@ -18,3 +18,9 @@ config/.flaskenv
 
 # OS
 .DS_Store
+.idea/
+__pycache__/
+*.pyc
+logs/
+.venv/
+.env
